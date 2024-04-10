@@ -102,8 +102,8 @@ function OnPlayerSpawn(player)
 end
 
 function OnPlayerReady(player)
-	local new_char = HELIXCharacter(Vector(0, 0, 500), Rotator(0, 0, 0), player)
-	
+	local new_char = Character(Vector(0,0,500),Rotator(),"helix::SK_Male") or HELIXCharacter(Vector(0, 0, 500), Rotator(0, 0, 0), player) or HCharacter(Vector(0, 0, 500), Rotator(0, 0, 0), player)
+	new_char:AddSkeletalMeshAttached("head","helix::SK_Male_Head")
 	new_char:SetCapsuleSize(20, 90)
 
 	if CoreCFG.MulticharEnabled then
