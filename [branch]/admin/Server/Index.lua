@@ -44,7 +44,32 @@ end)
 
 Events.SubscribeRemote("Player:Kick", function(player, target, reason)
     if target then
-        if reason then 
+        SendLog({
+            ["username"] = "Admin System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Player Kicked',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Admin',
+                            ['value'] = player:GetAccountName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Player Kicked',
+                            ['value'] = target:GetAccountName() .. ' '.. target:GetAccountID(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Reason',
+                            ['value'] = reason or 'No reason given.',
+                            ['inline'] =  true
+                        },
+                    }
+                }
+            }
+        })
+        if reason then
             target:Kick(reason)
             return
         end
@@ -220,6 +245,11 @@ Events.SubscribeRemote("Server:GetPlayerInfo", function(player, selectedPlayer)
     Events.CallRemote("Client:PlayerInfo", player, playerInfo)
 end)
 
+
+function SendLog(data)
+	HTTP.RequestAsync('https://discord.com', '/api/webhooks/1228086796429295717/aQzKic2kWNXuxeSANzp40ASHrpuwG0_Lm7VYJvwuwzhxV_CG8h7OYM18NHVKVojCUAjj', 'POST', JSON.stringify(data), 'application/json')
+end
+
 Events.Subscribe('core:playerSpawned', function(player)
     print('called')
     local playerIdentifier = player:GetAccountID()
@@ -228,6 +258,26 @@ Events.Subscribe('core:playerSpawned', function(player)
 
     if allowedAdmins[playerIdentifier] then
         Events.CallRemote('Client:AdminAllowed', player,  true)
+        SendLog({
+            ["username"] = "Admin System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Admin Joined',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Name',
+                            ['value'] = player:GetAccountName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Account Identifier',
+                            ['value'] = playerIdentifier,
+                            ['inline'] =  true
+                        },
+                    }
+                }
+            }
+        })
         print('admin found', allowedAdmins[playerIdentifier])
     end
 end)
@@ -241,6 +291,26 @@ Chat.Subscribe("PlayerSubmit", function(message, player)
 
         if allowedAdmins[playerIdentifier] then
             Events.CallRemote('Client:AdminAllowed', player, true)
+            SendLog({
+                ["username"] = "Admin System",
+                ['embeds'] = {
+                    {
+                        ['title'] = 'Admin Joined',
+                        ['fields'] = {
+                            {
+                                ['name'] = 'Name',
+                                ['value'] = player:GetAccountName(),
+                                ['inline'] =  true
+                            },
+                            {
+                                ['name'] = 'Account Identifier',
+                                ['value'] = playerIdentifier,
+                                ['inline'] =  true
+                            },
+                        }
+                    }
+                }
+            })
             print('admin found', allowedAdmins[playerIdentifier])
         end
     end
