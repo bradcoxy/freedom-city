@@ -1,0 +1,134 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+#screen {
+    width: 70%;
+    height: 70%;
+    border: 1px solid #ccc;
+    padding: 20px;
+    box-sizing: border-box;
+    display: none;
+    flex-direction: column;
+    background-color: beige;
+    /* overflow-y: auto; */
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+}
+
+button {
+    background-color: #ccc;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #999;
+}
+
+.content {
+    display: flex;
+    flex-grow: 1;
+    margin-top: 20px;
+}
+
+.selected-player {
+    background-color: #999;
+    border: 1px solid black;
+  }
+
+.left {
+    flex: 1;
+    padding-right: 10px;
+    box-sizing: border-box;
+}
+
+.right {
+    flex: 1;
+    padding: 25px;
+    height: 600px;
+    background-color: black;
+    color: white;
+    overflow-y: scroll;
+}
+
+
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    margin-top: 10px;
+}
+
+li {
+    padding: 10px;
+    background-color: #f2f2f2;
+    margin-bottom: 5px;
+    transition: background-color 0.3s;
+}
+
+li:hover {
+    background-color: #e0e0e0;
+}
+
+#playerInfo {
+    width: 100%;
+    height: 180px;
+    padding: 12px 20px;
+    box-sizing: border-box;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    resize: none;
+    overflow-y: scroll;
+    color: black;
+    background-color: beige;
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px;
+}
+
+
+.buttons button {
+    flex: 1;
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.inputFacha {
+    width: 100%;
+    height: 40px;
+    padding: 12px 12px;
+    box-sizing: border-box;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    resize: none;
+}
+
+
+
+#ban-button {
+    background-color: rgba(255, 0, 0, 0.557);
+    font-weight: bolder;
+    width: 200%;
+}
+
+#ban-button:hover {
+    background-color: rgba(168, 82, 82, 0.8);
+}

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <title>Admin System</title>
+</head>
+
+<body>
+  <div id="screen">
+    <div class="container">
+      <header>
+        <button>Page 1</button>
+        <button>Page 2</button>
+        <button>Page 3</button>
+      </header>
+      <div class="content">
+        <div class="left">
+          <input type="text" id="searchBar" placeholder="Search players">
+          <ul id="playerList">
+            <!-- Player list will be populated here -->
+          </ul>
+        </div>
+
+        <div class="right">
+          <div class="player-info">
+            <!-- <textarea id="playerInfo" readonly></textarea> -->
+            <div id="playerInfo" contenteditable="false"></div>
+
+          </div>
+          <div class="buttons">
+            <button class="go-to">Go to</button>
+            <button class="bring">Bring</button>
+            <button class="kill">Kill</button>
+            <button class="revive">Revive</button>
+            <button class="give-noclip" id="noclip">Toggle Noclip</button>
+            <button class="give-godmode">Toggle GodMode</button>
+            <button class="toggle-visibility">Toggle Visibility</button>
+            <button class="toggle-freeze">Freeze / Unfreeze (WIP)</button>
+            <button class="fix-vehicle">Fix Vehicle (WIP)</button>
+            <button class="delete-vehicle">Delete Vehicle</button>
+
+            <h1> Advanced </h1>
+            <br>
+            <button class="ban" id="ban-button">Ban(WIP)</button>
+            <br>
+            <input type="text" id="kickReason" placeholder="Reason"><button class="kick inputFacha">Kick</button>
+            <input type="text" id="jobName" placeholder="Job name"><button class="set-job inputFacha">Set Job</button>
+            
+            <select id="carSelect" class="select">
+              <option value="Sedan" class="inputFacha">Sedan</option>
+              <option value="Wagon" class="inputFacha">Wagon</option>
+              <option value="SUV" class="inputFacha">Offroad</option>
+              <!-- Agrega más opciones según sea necesario -->
+            </select>
+            <button class="give-car">Give Car</button>
+            <input type="text" id="cash" placeholder="$1000">
+            <button class="add-cash inputFacha">Add Cash</button>
+            <button class="remove-cash inputFacha">Remove Cash</button>
+            
+            <input type="text" id="bank" placeholder="$1000">
+            <button class="add-bank inputFacha">Add Bank</button>
+            <button class="remove-bank inputFacha">Remove Bank</button>
+            
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="script.js"></script>
+</body>
+
+</html>
