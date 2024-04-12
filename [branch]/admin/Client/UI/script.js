@@ -132,6 +132,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+document.querySelector('#ban-button').addEventListener('click', () => {
+  console.log('click on ban')
+  Events.Call("BanPlayer", selectedPlayer.identifier);
+});
+
   document.querySelector('.set-job').addEventListener('click', () => {
     const job = document.getElementById('jobName').value.trim();
 

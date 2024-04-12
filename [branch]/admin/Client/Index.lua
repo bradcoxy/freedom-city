@@ -109,6 +109,14 @@ AdminMenu.UI:Subscribe("KickPlayer", function(playerIdentifier, reason)
     end
 end)
 
+AdminMenu.UI:Subscribe('BanPlayer', function(playerIdentifier)
+    local target = AdminMenu.GetPlayerFromIdentifier(playerIdentifier)
+
+    if target then
+        Events.CallRemote("Player:Ban", target)
+    end
+end)
+
 AdminMenu.UI:Subscribe("SetPlayerJob", function(playerIdentifier, job)
     local allPlayers = Player.GetAll()
     local my_player = Client.GetLocalPlayer()

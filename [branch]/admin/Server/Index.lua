@@ -16,6 +16,26 @@ Events.SubscribeRemote("Goto:Teleport", function(player, target)
     local target_location = target_char:GetLocation()
 
     my_char:SetLocation(Vector(target_location.X, target_location.Y, target_location.Z + 300))
+    SendLog({
+        ["username"] = "Admin System",
+        ['embeds'] = {
+            {
+                ['title'] = 'Admin Teleported to Player',
+                ['fields'] = {
+                    {
+                        ['name'] = 'Admin',
+                        ['value'] = player:GetAccountName(),
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'Target Player',
+                        ['value'] = target:GetAccountName() .. ' '.. target:GetAccountID(),
+                        ['inline'] =  true
+                    }
+                }
+            }
+        }
+    })
 end)
 
 Events.SubscribeRemote("Bring:Teleport", function(player, target)
@@ -24,6 +44,26 @@ Events.SubscribeRemote("Bring:Teleport", function(player, target)
     local my_location = my_char:GetLocation()
 
     targetChar:SetLocation(Vector(my_location.X, my_location.Y, my_location.Z + 300))
+    SendLog({
+        ["username"] = "Admin System",
+        ['embeds'] = {
+            {
+                ['title'] = 'Player Brought To Admin',
+                ['fields'] = {
+                    {
+                        ['name'] = 'Admin',
+                        ['value'] = player:GetAccountName(),
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'Target Player',
+                        ['value'] = target:GetAccountName() .. ' '.. target:GetAccountID(),
+                        ['inline'] =  true
+                    }
+                }
+            }
+        }
+    })
 end)
 
 Events.SubscribeRemote("Player:Kill", function(player, target)
@@ -31,6 +71,26 @@ Events.SubscribeRemote("Player:Kill", function(player, target)
 
     if (xTarget) then
         xTarget.slay()
+        SendLog({
+            ["username"] = "Admin System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Player Killed by Admin',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Admin',
+                            ['value'] = player:GetAccountName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Player Killed',
+                            ['value'] = target:GetAccountName() .. ' '.. target:GetAccountID(),
+                            ['inline'] =  true
+                        }
+                    }
+                }
+            }
+        })
     end
 end)
 
@@ -77,6 +137,47 @@ Events.SubscribeRemote("Player:Kick", function(player, target, reason)
     end
 end)
 
+Events.SubscribeRemote('Player:Ban', function(player, target)
+    if not target then return end
+
+    local bansFilePath = 'Packages/'.. Package.GetName() ..'/bans.json'
+    local bansFile = File(bansFilePath, false)
+    local currentBans = bansFile:Size() > 0 and JSON.parse(bansFile:Read()) or {}
+
+    if not currentBans[target:GetAccountID()] then
+        local emptyJSON = File(bansFilePath, true)
+
+        currentBans[target:GetAccountID()] = true
+        currentBans[target:GetIP()] = true
+
+        emptyJSON:Write(JSON.stringify(currentBans))
+        emptyJSON:Close()
+        bansFile:Close()
+        SendLog({
+            ["username"] = "Admin System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Player Banned',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Admin',
+                            ['value'] = player:GetAccountName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Player Banned',
+                            ['value'] = target:GetAccountName() .. ' '.. target:GetAccountID(),
+                            ['inline'] =  true
+                        }
+                    }
+                }
+            }
+        })
+
+        target:Kick('You have been banned.')
+    end
+end)
+
 Events.SubscribeRemote("Player:SetJob", function(player, target, job)
     if target then
         local xTarget = Core.GetPlayerFromId(target:GetID())
@@ -110,6 +211,21 @@ Events.SubscribeRemote("Player:ToggleNoclip", function(player, target)
         end
 
         character:SetValue('NoClip', not is_noclipping)
+        SendLog({
+            ["username"] = "Admin System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Admin Toggled NoClip',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Admin',
+                            ['value'] = player:GetAccountName(),
+                            ['inline'] =  true
+                        }
+                    }
+                }
+            }
+        })
     end
 end)
 
@@ -134,6 +250,21 @@ Events.SubscribeRemote("Player:ToggleGodMode", function (player, target)
         end
 
         character:SetValue('GodMode', not is_godmode)
+        SendLog({
+            ["username"] = "Admin System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Admin Toggled God Mode',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Admin',
+                            ['value'] = player:GetAccountName(),
+                            ['inline'] =  true
+                        }
+                    }
+                }
+            }
+        })
     end
 end)
 
@@ -247,17 +378,46 @@ end)
 
 
 function SendLog(data)
-	HTTP.RequestAsync('https://discord.com', '/api/webhooks/1228086796429295717/aQzKic2kWNXuxeSANzp40ASHrpuwG0_Lm7VYJvwuwzhxV_CG8h7OYM18NHVKVojCUAjj', 'POST', JSON.stringify(data), 'application/json')
+	HTTP.RequestAsync('https://discord.com', '/api/webhooks/1226893748827455549/CH7TO4toQuJxRBXikoC6vwLZx74ftFdaDw1tL-ymcDzwwFnI5fIWo7t6y68wqXA_zbUC', 'POST', JSON.stringify(data), 'application/json')
 end
 
-Events.Subscribe('core:playerSpawned', function(player)
-    print('called')
-    local playerIdentifier = player:GetAccountID()
+-- ban checking
+Server.Subscribe("PlayerConnect", function(IP, player_account_ID)
+    local bansFile = File('Packages/'.. Package.GetName() ..'/bans.json')
+    local bannedPlayers = bansFile:Size() > 0 and JSON.parse(bansFile:Read()) or {}
+
+    if (bannedPlayers[player_account_ID]) or (bannedPlayers[IP]) then
+        SendLog({
+            ["username"] = "Admin System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Banned Player Tried To Join',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Account ID',
+                            ['value'] = player_account_ID,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'IP Address',
+                            ['value'] = IP,
+                            ['inline'] =  true
+                        },
+                    }
+                }
+            }
+        })
+        return false
+    end
+end)
+
+Player.Subscribe("Ready", function(self)
+    local playerIdentifier = self:GetAccountID()
     local adminsFile = File('Packages/'.. Package.GetName() ..'/admin.json')
-    local allowedAdmins = JSON.parse(adminsFile:Read())
+    local allowedAdmins = adminsFile:Size() > 0 and JSON.parse(adminsFile:Read()) or {}
 
     if allowedAdmins[playerIdentifier] then
-        Events.CallRemote('Client:AdminAllowed', player,  true)
+        Events.CallRemote('Client:AdminAllowed', self,  true)
         SendLog({
             ["username"] = "Admin System",
             ['embeds'] = {
@@ -266,7 +426,7 @@ Events.Subscribe('core:playerSpawned', function(player)
                     ['fields'] = {
                         {
                             ['name'] = 'Name',
-                            ['value'] = player:GetAccountName(),
+                            ['value'] = self:GetAccountName(),
                             ['inline'] =  true
                         },
                         {
@@ -279,40 +439,6 @@ Events.Subscribe('core:playerSpawned', function(player)
             }
         })
         print('admin found', allowedAdmins[playerIdentifier])
-    end
-end)
-
-Chat.Subscribe("PlayerSubmit", function(message, player)
-    if message == "s" then
-        print('called')
-        local playerIdentifier = player:GetAccountID()
-        local adminsFile = File('Packages/'.. Package.GetName() ..'/admin.json')
-        local allowedAdmins = JSON.parse(adminsFile:Read())
-
-        if allowedAdmins[playerIdentifier] then
-            Events.CallRemote('Client:AdminAllowed', player, true)
-            SendLog({
-                ["username"] = "Admin System",
-                ['embeds'] = {
-                    {
-                        ['title'] = 'Admin Joined',
-                        ['fields'] = {
-                            {
-                                ['name'] = 'Name',
-                                ['value'] = player:GetAccountName(),
-                                ['inline'] =  true
-                            },
-                            {
-                                ['name'] = 'Account Identifier',
-                                ['value'] = playerIdentifier,
-                                ['inline'] =  true
-                            },
-                        }
-                    }
-                }
-            })
-            print('admin found', allowedAdmins[playerIdentifier])
-        end
     end
 end)
 
