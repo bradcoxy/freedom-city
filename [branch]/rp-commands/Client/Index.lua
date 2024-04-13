@@ -1,1 +1,1 @@
-local RoleplayCommands = {}
+Chat.SetConfiguration(Vector2D(25, -450))

@@ -18,7 +18,6 @@ RoleplayCommands.Alternatives = {
 }
 
 
-
 function RoleplayCommands.OOC(player, message, alternative)
     local xPlayer = Core.GetPlayerFromId(player:GetID())
     local name = xPlayer.getName()
@@ -44,11 +43,11 @@ function RoleplayCommands.LOOC(player, message, alternative)
                 local distanceBetween = otherPlayerLocation:Distance(playerLocation)
 
                 if distanceBetween <= 10000 then
-                    Chat.SendMessage(otherPlayer, ('<red>[%s]</> <cyan>[OOC]</> %s.'):format(name, looc))
+                    Chat.SendMessage(otherPlayer, ('<red>[%s]</> <cyan>[OOC]</> %s'):format(name, looc))
                 end
             end
         end
-        Chat.SendMessage(player, ('<red>[%s]</> <cyan>[OOC]</> %s.'):format(name, looc))
+        Chat.SendMessage(player, ('<red>[%s]</> <cyan>[OOC]</> %s'):format(name, looc))
     end
 end
 
@@ -66,11 +65,11 @@ function RoleplayCommands.YELL(player, message, alternative)
                 local distanceBetween = otherPlayerLocation:Distance(playerLocation)
 
                 if distanceBetween <= 5000 then
-                    Chat.SendMessage(otherPlayer, ('<red>[%s]</> <cyan>[Yelled]</> %s.'):format(name, yell))
+                    Chat.SendMessage(otherPlayer, ('<red>[%s]</> <cyan>[Yelled]</> %s'):format(name, yell))
                 end
             end
         end
-        Chat.SendMessage(player, ('<red>[%s]</> <cyan>[Yelled]</> %s.'):format(name, yell))
+        Chat.SendMessage(player, ('<red>[%s]</> <cyan>[Yelled]</> %s'):format(name, yell))
     end
 end
 
@@ -88,11 +87,11 @@ function RoleplayCommands.ME(player, message, alternative)
                 local distanceBetween = otherPlayerLocation:Distance(playerLocation)
 
                 if distanceBetween <= 1500 then
-                    Chat.SendMessage(otherPlayer, ('<red>%s</> %s.'):format(name, me))
+                    Chat.SendMessage(otherPlayer, ('<red>%s</> %s'):format(name, me))
                 end
             end
         end
-        Chat.SendMessage(player, ('<red>%s</> %s.'):format(name, me))
+        Chat.SendMessage(player, ('<red>%s</> %s'):format(name, me))
     end
 end
 
@@ -110,11 +109,11 @@ function RoleplayCommands.WHISPER(player, message, alternative)
                 local distanceBetween = otherPlayerLocation:Distance(playerLocation)
 
                 if distanceBetween <= 500 then
-                    Chat.SendMessage(otherPlayer, ('<red>[%s]</> <cyan>[Whispered]</> %s.'):format(name, whisper))
+                    Chat.SendMessage(otherPlayer, ('<red>[%s]</> <cyan>[Whispered]</> %s'):format(name, whisper))
                 end
             end
         end
-        Chat.SendMessage(player, ('<red>[%s]</> <cyan>[Whispered]</> %s.'):format(name, whisper))
+        Chat.SendMessage(player, ('<red>[%s]</> <cyan>[Whispered]</> %s'):format(name, whisper))
     end
 end
 
@@ -145,12 +144,12 @@ function RoleplayCommands.WD(player, message)
                 local distanceBetween = otherPlayerLocation:Distance(playerLocation)
 
                 if distanceBetween <= 3000 then
-                    Chat.SendMessage(otherPlayer, ('<red>%s</> is whispering to <cyan>%s</>.'):format(name, targetPlayer.getName()))
+                    Chat.SendMessage(otherPlayer, ('<red>%s</> is whispering to <cyan>%s</>'):format(name, targetPlayer.getName()))
                 end
             end
         end
         Chat.SendMessage(player, ('<cyan>[Whispered]</> %s <red>[%s]</>'):format(whisper, targetPlayer.getName()))
-        Chat.SendMessage(targetPlayer, ('<red>[%s]</> <cyan>[Whispered]</> %s.'):format(name, whisper))
+        Chat.SendMessage(targetPlayer, ('<red>[%s]</> <cyan>[Whispered]</> %s'):format(name, whisper))
     end
 end
 
