@@ -11,7 +11,7 @@ RoleplayCommands.AllowedCommands = {
 }
 RoleplayCommands.Alternatives = {
     ['o'] = 'ooc',
-    ['l'] = 'looc',
+    ['lo'] = 'looc',
     ['w'] = 'whisper',
     ['y'] = 'yell',
     ['m'] = 'me'
@@ -25,7 +25,7 @@ function RoleplayCommands.OOC(player, message, alternative)
 	local ooc = (message):match(pattern)
 
     if ooc then
-        Chat.BroadcastMessage(('<red>[%s]</> <cyan>[OOC]</> %s.'):format(name, ooc))
+        Chat.BroadcastMessage(('<red>[OOC]</> <blue>%s</> %s'):format(name, ooc))
     end
 end
 
@@ -43,11 +43,11 @@ function RoleplayCommands.LOOC(player, message, alternative)
                 local distanceBetween = otherPlayerLocation:Distance(playerLocation)
 
                 if distanceBetween <= 10000 then
-                    Chat.SendMessage(otherPlayer, ('<red>[%s]</> <cyan>[OOC]</> %s'):format(name, looc))
+                    Chat.SendMessage(otherPlayer, ('<red>[LOOC]</> <blue>%s</> %s'):format(name, looc))
                 end
             end
         end
-        Chat.SendMessage(player, ('<red>[%s]</> <cyan>[OOC]</> %s'):format(name, looc))
+        Chat.SendMessage(player, ('<red>[LOOC]</> <blue>%s</> %s'):format(name, looc))
     end
 end
 
@@ -65,11 +65,11 @@ function RoleplayCommands.YELL(player, message, alternative)
                 local distanceBetween = otherPlayerLocation:Distance(playerLocation)
 
                 if distanceBetween <= 5000 then
-                    Chat.SendMessage(otherPlayer, ('<red>[%s]</> <cyan>[Yelled]</> %s'):format(name, yell))
+                    Chat.SendMessage(otherPlayer, ('<red>%s</> <yellow>yells</> "%s"'):format(name, yell))
                 end
             end
         end
-        Chat.SendMessage(player, ('<red>[%s]</> <cyan>[Yelled]</> %s'):format(name, yell))
+        Chat.SendMessage(player, ('<red>%s</> <yellow>yells</> "%s"'):format(name, yell))
     end
 end
 
@@ -87,11 +87,11 @@ function RoleplayCommands.ME(player, message, alternative)
                 local distanceBetween = otherPlayerLocation:Distance(playerLocation)
 
                 if distanceBetween <= 1500 then
-                    Chat.SendMessage(otherPlayer, ('<red>%s</> %s'):format(name, me))
+                    Chat.SendMessage(otherPlayer, ('<red>%s</> says "%s"'):format(name, me))
                 end
             end
         end
-        Chat.SendMessage(player, ('<red>%s</> %s'):format(name, me))
+        Chat.SendMessage(player, ('<red>%s</> says "%s"'):format(name, me))
     end
 end
 
@@ -109,11 +109,11 @@ function RoleplayCommands.WHISPER(player, message, alternative)
                 local distanceBetween = otherPlayerLocation:Distance(playerLocation)
 
                 if distanceBetween <= 500 then
-                    Chat.SendMessage(otherPlayer, ('<red>[%s]</> <cyan>[Whispered]</> %s'):format(name, whisper))
+                    Chat.SendMessage(otherPlayer, ('<red>%s</> <yellow>whispers</> "%s"'):format(name, whisper))
                 end
             end
         end
-        Chat.SendMessage(player, ('<red>[%s]</> <cyan>[Whispered]</> %s'):format(name, whisper))
+        Chat.SendMessage(player, ('<red>%s</> <yellow>whispers</> "%s"'):format(name, whisper))
     end
 end
 
@@ -126,14 +126,19 @@ function RoleplayCommands.WD(player, message)
 	local target, whisper = (message):match(pattern)
     local targetPlayer = Core.GetPlayerFromId(target)
 
+    if not target then
+        Chat.SendMessage(player, ('<yellow>[Direct Whisper]</> <red>(id) (message).</>'):format(target))
+        return
+    end
+
     if not targetPlayer then
-        Chat.SendMessage(player, ('<cyan>[Direct Whisper]</> no player with the id <red>%s</>.'):format(target))
+        Chat.SendMessage(player, ('<yellow>[Direct Whisper]</> no player with the id <red>%s</>.'):format(target))
         return
     end
 
     local targetLocation = targetPlayer.character:GetLocation()
     if targetLocation:Distance(playerLocation) > 1000 then
-        Chat.SendMessage(player, '<cyan>[Direct Whisper]</> player is too far away.')
+        Chat.SendMessage(player, '<yellow>[Direct Whisper]</> player is too far away.')
         return
     end
 
@@ -144,12 +149,12 @@ function RoleplayCommands.WD(player, message)
                 local distanceBetween = otherPlayerLocation:Distance(playerLocation)
 
                 if distanceBetween <= 3000 then
-                    Chat.SendMessage(otherPlayer, ('<red>%s</> is whispering to <cyan>%s</>'):format(name, targetPlayer.getName()))
+                    Chat.SendMessage(otherPlayer, ('<red>%s</> is whispering to <blue>%s</>'):format(name, targetPlayer.getName()))
                 end
             end
         end
-        Chat.SendMessage(player, ('<cyan>[Whispered]</> %s <red>[%s]</>'):format(whisper, targetPlayer.getName()))
-        Chat.SendMessage(targetPlayer, ('<red>[%s]</> <cyan>[Whispered]</> %s'):format(name, whisper))
+        Chat.SendMessage(player, ('<red>%s</> whispers "%s"'):format(name, whisper))
+        Chat.SendMessage(targetPlayer, ('<red>%s</> whispers "%s"'):format(name, whisper))
     end
 end
 
