@@ -1,14 +1,5 @@
---[[-------------------------------------
---   @brief   Helix Admin Menu         --
---                                     --
---                                     --
---   @author  @Kravs                   --
---   @version 0.0.1                    --
---   @date    May 2023                 --
----------------------------------------]]
-
-
 local AdminMenu = {}
+AdminMenu.activeBans = {}
 
 Events.SubscribeRemote("Goto:Teleport", function(player, target)
     local my_char = player:GetControlledCharacter()
@@ -137,22 +128,42 @@ Events.SubscribeRemote("Player:Kick", function(player, target, reason)
     end
 end)
 
-Events.SubscribeRemote('Player:Ban', function(player, target)
+Events.SubscribeRemote('Player:Ban', function(player, target, reason)
     if not target then return end
 
+    reason = reason or 'No reason was given.'
+
+    local targetAccount = target:GetAccountID()
+    local targetIP = target:GetIP()
+    local targetName = player:GetAccountName()
     local bansFilePath = 'Packages/'.. Package.GetName() ..'/bans.json'
     local bansFile = File(bansFilePath, false)
     local currentBans = bansFile:Size() > 0 and JSON.parse(bansFile:Read()) or {}
 
-    if not currentBans[target:GetAccountID()] then
+    if not currentBans[targetAccount].active then
         local emptyJSON = File(bansFilePath, true)
 
-        currentBans[target:GetAccountID()] = true
-        currentBans[target:GetIP()] = true
+        currentBans[targetAccount] = currentBans[targetAccount] or {}
+        currentBans[targetAccount].active = true
+        currentBans[targetIP] = true
+        currentBans[targetAccount]['pastBans'] = currentBans[targetAccount]['pastBans'] or {}
+        table.insert(currentBans[targetAccount]['pastBans'], {
+            reason = reason,
+            time = os.date()
+        })
 
         emptyJSON:Write(JSON.stringify(currentBans))
         emptyJSON:Close()
         bansFile:Close()
+
+        local previousBansLog = {}
+        for k, ban in pairs(currentBans[targetAccount]['pastBans']) do
+            previousBansLog[#previousBansLog + 1] = {
+                ['name'] = ('#%s Reason: %s'):format(k, ban.reason),
+                ['value'] = ('Time: %s'):format(ban.time),
+                ['inline'] =  true
+            }
+        end
         SendLog({
             ["username"] = "Admin System",
             ['embeds'] = {
@@ -161,20 +172,24 @@ Events.SubscribeRemote('Player:Ban', function(player, target)
                     ['fields'] = {
                         {
                             ['name'] = 'Admin',
-                            ['value'] = player:GetAccountName(),
+                            ['value'] = targetName,
                             ['inline'] =  true
                         },
                         {
                             ['name'] = 'Player Banned',
-                            ['value'] = target:GetAccountName() .. ' '.. target:GetAccountID(),
+                            ['value'] = ('%s %s'):format(targetName, targetAccount),
                             ['inline'] =  true
                         }
                     }
+                },
+                {
+                    ['title'] = ('%s\'s Previous Bans'):format(targetName),
+                    ['fields'] = previousBansLog
                 }
             }
         })
 
-        target:Kick('You have been banned.')
+        target:Kick('You have been banned. '.. reason)
     end
 end)
 
@@ -368,7 +383,7 @@ Events.SubscribeRemote("Server:GetPlayerInfo", function(player, selectedPlayer)
                 Nationality = nationality,
                 XP = xp,
                 Rank = rank,
-                PhoneNumber = "23123",
+                PhoneNumber = "23123"
             }
         end
     end
@@ -386,7 +401,7 @@ Server.Subscribe("PlayerConnect", function(IP, player_account_ID)
     local bansFile = File('Packages/'.. Package.GetName() ..'/bans.json')
     local bannedPlayers = bansFile:Size() > 0 and JSON.parse(bansFile:Read()) or {}
 
-    if (bannedPlayers[player_account_ID]) or (bannedPlayers[IP]) then
+    if (bannedPlayers[player_account_ID].active) or (bannedPlayers[IP]) then
         SendLog({
             ["username"] = "Admin System",
             ['embeds'] = {
