@@ -401,7 +401,7 @@ Server.Subscribe("PlayerConnect", function(IP, player_account_ID)
     local bansFile = File('Packages/'.. Package.GetName() ..'/bans.json')
     local bannedPlayers = bansFile:Size() > 0 and JSON.parse(bansFile:Read()) or {}
 
-    if (bannedPlayers[player_account_ID].active) or (bannedPlayers[IP]) then
+    if (bannedPlayers[player_account_ID]) and (bannedPlayers[player_account_ID].active) or (bannedPlayers[IP]) then
         SendLog({
             ["username"] = "Admin System",
             ['embeds'] = {
