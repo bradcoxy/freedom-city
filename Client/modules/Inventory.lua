@@ -53,7 +53,7 @@ InventoryHUD.Subscribe('GetNearbyPlayers', function()
     InventoryHUD.Call('SendNearbyPlayers', nearbyPlayers)
 end)
 
-function CloseInventory()
+function Core.CloseInventory()
     -- Core.BlurScreen(false)
     Core.ShowHUD()
     InventoryHUD.Focus(false, true)
@@ -130,9 +130,9 @@ function UseItem(data, closeInv)
     if Core.InventoryOpened then
         OpenInventory()
     end
-    
+
     if closeInv then
-        CloseInventory()
+        Core.CloseInventory()
     end
 end
 
@@ -147,7 +147,7 @@ function SplitItem(slot, amount)
     end, slot, amount)
 end
 
-InventoryHUD.Subscribe('CloseInventory', CloseInventory)
+InventoryHUD.Subscribe('CloseInventory', Core.CloseInventory)
 InventoryHUD.Subscribe('DropItem', RemoveItem)
 -- InventoryHUD.Subscribe('UseItem', RemoveItem)
 InventoryHUD.Subscribe('GiveItem', GiveItem)
@@ -156,7 +156,7 @@ InventoryHUD.Subscribe('inventory:SplitItem', SplitItem)
 
 Core.RegisterInput('I', function()
     if Core.InventoryOpened then
-        CloseInventory()
+        Core.CloseInventory()
         return
     end
     
@@ -167,7 +167,7 @@ end)
 Core.RegisterInput('G', function()
     if not Core.IsPlayerInAnyVehicle() then return end
     if Core.InventoryOpened then
-        CloseInventory()
+        Core.CloseInventory()
         return
     end
     
