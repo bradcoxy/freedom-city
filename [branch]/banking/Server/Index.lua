@@ -5,7 +5,7 @@ Banking.IBANs = {}
 Banking.Cards = {}
 Banking.ATMs = {
     ["south_east_atm_1"] = {
-        location = Vector(206.8, -257.4, 40.0),
+        location = Vector(206.8, -257.4, 10.0),
         rotation = Rotator(0.0, 0.0, 0.0),
         label = "South East Park ATM",
     },
@@ -17,7 +17,7 @@ Banking.MinCardPayment = 15
 
 Package.Subscribe('Load', function()
     local savedAccounts = DB:Select('SELECT * FROM user_banking')
-    for k, account in pairs(savedAccounts) do
+    for _, account in pairs(savedAccounts) do
 
         Banking.Accounts[account.identifier] = {
             iban = account.iban,
@@ -50,6 +50,18 @@ Package.Subscribe('Load', function()
             type = 'item',
         }
     })
+
+    for _, atm in pairs(Banking.ATMs) do
+        local prop = Prop(
+            atm.location,
+            atm.rotation,
+            'helix::SM_HalfStack_Marshall',
+            CollisionType.Normal,
+            false,
+            GrabMode.Disabled
+        )
+        prop:SetScale(Vector(1, 1, 1.5))
+    end
 end)
 
 --Functions
@@ -162,6 +174,41 @@ function Banking:CardBillingCycle(player)
                     card.balance = card.balance + minPayment
 
                     player.showNotification("Your Credit Card bill is: $"..payment, "Credit Card", "info")
+                    SendLog({
+                        ["username"] = "Banking System",
+                        ['embeds'] = {
+                            {
+                                ['title'] = 'Card Payment Deducted',
+                                ['fields'] = {
+                                    {
+                                        ['name'] = 'Bank Account Holder',
+                                        ['value'] = player.getName(),
+                                        ['inline'] =  true
+                                    },
+                                    {
+                                        ['name'] = 'Account ID',
+                                        ['value'] = player.identifier,
+                                        ['inline'] =  true
+                                    },
+                                    {
+                                        ['name'] = 'Character ID',
+                                        ['value'] = player.get('charId'),
+                                        ['inline'] =  true
+                                    },
+                                    {
+                                        ['name'] = 'Deducted for Card',
+                                        ['value'] = number,
+                                        ['inline'] =  true
+                                    },
+                                    {
+                                        ['name'] = 'Deducted from Checking Minimum Payment Of',
+                                        ['value'] = '$'.. minPayment,
+                                        ['inline'] =  true
+                                    },
+                                }
+                            }
+                        }
+                    })
                     print("PAYMENT INFO:", minPayment, payment, self.Cards[number].balance, card.balance)
                 end
             end
@@ -231,6 +278,36 @@ function Banking:OpenATM(player, cardNumber)
     account.id = player.getID()
 
     player.call('Banking:OpenATM', account, card, cardNumber)
+    SendLog({
+        ["username"] = "Banking System",
+        ['embeds'] = {
+            {
+                ['title'] = 'ATM Accessed',
+                ['fields'] = {
+                    {
+                        ['name'] = 'Bank Account Holder',
+                        ['value'] = player.getName(),
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'Account ID',
+                        ['value'] = player.identifier,
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'Character ID',
+                        ['value'] = player.get('charId'),
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'Accessed with Card',
+                        ['value'] = cardNumber,
+                        ['inline'] =  true
+                    },
+                }
+            }
+        }
+    })
 end
 
 function Banking:SetAccountPIN(player, account)
@@ -274,6 +351,46 @@ function Banking:Deposit(player, depositData)
 
         player.showNotification(('You\'ve deposited $%s into Card %s.'):format(amount, card.lastfour))
         player.call('Banking:updateData', account, card, depositData.cardNumber)
+        SendLog({
+            ["username"] = "Banking System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Deposit into Card',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Bank Account Holder',
+                            ['value'] = player.getName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Account ID',
+                            ['value'] = player.identifier,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Character ID',
+                            ['value'] = player.get('charId'),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Card',
+                            ['value'] = depositData.cardNumber,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Amount',
+                            ['value'] = amount,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'New Balance',
+                            ['value'] = card.balance,
+                            ['inline'] =  true
+                        },
+                    }
+                }
+            }
+        })
         return
     end
 
@@ -325,6 +442,46 @@ function Banking:Withdraw(player, withdrawData)
 
             player.showNotification('You\'ve withdrawed $'.. amount ..'.')
             player.call('Banking:updateData', account, card, withdrawData.cardNumber)
+            SendLog({
+                ["username"] = "Banking System",
+                ['embeds'] = {
+                    {
+                        ['title'] = 'Withdrawal from Card',
+                        ['fields'] = {
+                            {
+                                ['name'] = 'Bank Account Holder',
+                                ['value'] = player.getName(),
+                                ['inline'] =  true
+                            },
+                            {
+                                ['name'] = 'Account ID',
+                                ['value'] = player.identifier,
+                                ['inline'] =  true
+                            },
+                            {
+                                ['name'] = 'Character ID',
+                                ['value'] = player.get('charId'),
+                                ['inline'] =  true
+                            },
+                            {
+                                ['name'] = 'Card',
+                                ['value'] = withdrawData.cardNumber,
+                                ['inline'] =  true
+                            },
+                            {
+                                ['name'] = 'Amount',
+                                ['value'] = amount,
+                                ['inline'] =  true
+                            },
+                            {
+                                ['name'] = 'New Balance',
+                                ['value'] = card.balance,
+                                ['inline'] =  true
+                            },
+                        }
+                    }
+                }
+            })
             return
         end
 
@@ -347,6 +504,46 @@ function Banking:Withdraw(player, withdrawData)
 
         player.showNotification('You\'ve withdrawed $'.. amount ..'.')
         player.call('Banking:updateData', account, card, withdrawData.cardNumber)
+        SendLog({
+            ["username"] = "Banking System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Withdrawal from Card Exceeding Limit',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Bank Account Holder',
+                            ['value'] = player.getName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Account ID',
+                            ['value'] = player.identifier,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Character ID',
+                            ['value'] = player.get('charId'),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Card',
+                            ['value'] = withdrawData.cardNumber,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Amount',
+                            ['value'] = amount,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'New Balance',
+                            ['value'] = card.balance,
+                            ['inline'] =  true
+                        },
+                    }
+                }
+            }
+        })
         return
     end
 
@@ -379,7 +576,159 @@ function Banking:Transfer(player, transferData)
     local accountSender = self.Accounts[player.charid]
     local card = accountSender.cards[transferData.cardNumber]
 
-    local transferTo = string.upper(transferData.iban)
+    if card and (transferData.type == 'card') then
+        local transferToCardNumber = transferData.iban
+        local transferToCard = self.Cards[transferToCardNumber]
+        local transferAmount = transferData.amount
+
+        if (transferToCardNumber == transferData.cardNumber) then
+            player.showNotification('You cannot transfer to yourself.')
+            return
+        end
+
+        if not transferToCard then
+            player.showNotification('There is no card with the number : '.. transferToCard ..'.')
+            return
+        end
+
+        local accountReceiver = self.Accounts[transferToCard]
+        local receivingCard = accountReceiver.cards[transferToCardNumber]
+        local receivingPlayer = Core.GetPlayerFromId(accountReceiver.id)
+
+        if not receivingPlayer then
+            player.showNotification('You cannot transfer to this card at the moment.')
+            return
+        end
+
+        print('using card to transfer')
+        if card.balance < transferAmount then
+            player.showNotification('Your card doesn\'t have enough balance for this transaction.')
+            return
+        end
+
+        local receiverStatsIncome = accountReceiver.stats.income.amount or 0
+        local receiverTotalIncome = receiverStatsIncome + transferAmount
+
+        local senderStatsOutcome = accountSender.stats.outcome.amount or 0
+        local senderTotalOutcome = senderStatsOutcome + transferAmount
+
+        card.balance = card.balance - transferAmount
+        receivingCard.balance = receivingCard.balance + transferAmount
+
+        accountSender.transactions[#accountSender.transactions + 1] = {
+            transactionid = #accountSender.transactions + 1,
+            accountname = ('Transferred to Card %s from Card %s'):format(receivingCard.lastfour, card.lastfour),
+            amount = transferAmount,
+            inflow = false,
+        }
+        accountSender.stats.outcome.amount = senderTotalOutcome
+
+        accountReceiver.transactions[#accountReceiver.transactions + 1] = {
+            transactionid = #accountReceiver.transactions + 1,
+            accountname = ('Received to Card %s from Card %s'):format(receivingCard.lastfour, card.lastfour),
+            amount = transferAmount,
+            inflow = true,
+        }
+        accountReceiver.stats.income.amount = receiverTotalIncome
+
+        player.showNotification('You have transfered $'.. transferAmount ..' to the card: '.. receivingCard.lastfour ..'.')
+        receivingPlayer.showNotification('You have received $'.. transferAmount ..' to your card: '.. receivingCard.lastfour ..'.')
+
+        player.call('Banking:updateData', accountSender, card, transferData.cardNumber)
+        SendLog({
+            ["username"] = "Banking System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Transfer from Card to Card',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Bank Account Holder',
+                            ['value'] = player.getName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Account ID',
+                            ['value'] = player.identifier,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Character ID',
+                            ['value'] = player.get('charId'),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Card',
+                            ['value'] = transferData.cardNumber,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Transferred to Account Holder',
+                            ['value'] = receivingPlayer.getName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Transferred to Card',
+                            ['value'] = transferToCardNumber,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Amount',
+                            ['value'] = transferAmount,
+                            ['inline'] =  true
+                        },
+                    }
+                }
+            }
+        })
+        SendLog({
+            ["username"] = "Banking System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Received Transfer from Card to Card',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Bank Account Holder',
+                            ['value'] = receivingPlayer.getName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Account ID',
+                            ['value'] = receivingPlayer.identifier,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Character ID',
+                            ['value'] = receivingPlayer.get('charId'),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Received from Card',
+                            ['value'] = transferData.cardNumber,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Received from Account Holder',
+                            ['value'] = player.getName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Receiving Card',
+                            ['value'] = transferToCardNumber,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Amount',
+                            ['value'] = transferAmount,
+                            ['inline'] =  true
+                        },
+                    }
+                }
+            }
+        })
+        return
+    end
+
+--[[     local transferTo = string.upper(transferData.iban)
     local transferAmount = transferData.amount
 
     if accountSender.iban == transferTo then
@@ -437,6 +786,86 @@ function Banking:Transfer(player, transferData)
         receivingPlayer.showNotification('You have received $'.. transferAmount ..' from the IBAN : '.. accountSender.iban ..'.')
 
         player.call('Banking:updateData', accountSender, card, transferData.cardNumber)
+        SendLog({
+            ["username"] = "Banking System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Transfer from Card',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Bank Account Holder',
+                            ['value'] = player.getName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Account ID',
+                            ['value'] = player.identifier,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Character ID',
+                            ['value'] = player.get('charId'),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Card',
+                            ['value'] = transferData.cardNumber,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Transferred to account',
+                            ['value'] = transferTo,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Amount',
+                            ['value'] = transferAmount,
+                            ['inline'] =  true
+                        },
+                    }
+                }
+            }
+        })
+        SendLog({
+            ["username"] = "Banking System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Received Transfer',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Bank Account Holder',
+                            ['value'] = receivingPlayer.getName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Account ID',
+                            ['value'] = receivingPlayer.identifier,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Character ID',
+                            ['value'] = receivingPlayer.get('charId'),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Received from account',
+                            ['value'] = transferData.cardNumber,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Received to account',
+                            ['value'] = transferTo,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Amount',
+                            ['value'] = transferAmount,
+                            ['inline'] =  true
+                        },
+                    }
+                }
+            }
+        })
         return
     end
 
@@ -469,7 +898,7 @@ function Banking:Transfer(player, transferData)
     accountReceiver.stats.income.amount = receiverTotalIncome
 
     player.call('Banking:ClientEvent', 'updateData', accountSender)
-    receivingPlayer.call('Banking:ClientEvent', 'updateData', accountReceiver)
+    receivingPlayer.call('Banking:ClientEvent', 'updateData', accountReceiver) ]]
 end
 
 function Banking:ChangeIBAN(player, iban)
@@ -501,6 +930,36 @@ function Banking:ChangeIBAN(player, iban)
     
     player.showNotification('You\'ve changed your IBAN to : '.. newIBAN ..'.')
     player.call('Banking:ClientEvent', 'updateData', account)
+    SendLog({
+        ["username"] = "Banking System",
+        ['embeds'] = {
+            {
+                ['title'] = 'Account IBAN Change',
+                ['fields'] = {
+                    {
+                        ['name'] = 'Bank Account Holder',
+                        ['value'] = player.getName(),
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'Account ID',
+                        ['value'] = player.identifier,
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'Character ID',
+                        ['value'] = player.get('charId'),
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'New IBAN',
+                        ['value'] = account.iban,
+                        ['inline'] =  true
+                    }
+                }
+            }
+        }
+    })
 end
 
 function Banking:ChangePIN(player, pin, cardNumber)
@@ -512,6 +971,7 @@ function Banking:ChangePIN(player, pin, cardNumber)
     local account = self.Accounts[player.charid]
     local card =  account.cards[cardNumber]
     local newPIN = tostring(pin)
+    local previousPIN = card.pin 
 
     if not card then return end
 
@@ -528,6 +988,36 @@ function Banking:ChangePIN(player, pin, cardNumber)
     end, 60000 * 5)
 
     player.showNotification('You\'ve changed your PIN to : '.. newPIN ..'.')
+    SendLog({
+        ["username"] = "Banking System",
+        ['embeds'] = {
+            {
+                ['title'] = 'Card PIN Change',
+                ['fields'] = {
+                    {
+                        ['name'] = 'Bank Account Holder',
+                        ['value'] = player.getName(),
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'Account ID',
+                        ['value'] = player.identifier,
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'Character ID',
+                        ['value'] = player.get('charId'),
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'Card Number',
+                        ['value'] = cardNumber,
+                        ['inline'] =  true
+                    }
+                }
+            }
+        }
+    })
 end
 
 function Banking.GetAccount(charid)
@@ -536,6 +1026,10 @@ end
 
 function Banking.GetAccountFromIBAN(iban)
     return Banking.IBANs[iban] and Banking.Accounts[Banking.IBANs[iban]]
+end
+
+function SendLog(data)
+	HTTP.RequestAsync('https://discord.com', '/api/webhooks/1226893748827455549/CH7TO4toQuJxRBXikoC6vwLZx74ftFdaDw1tL-ymcDzwwFnI5fIWo7t6y68wqXA_zbUC', 'POST', JSON.stringify(data), 'application/json')
 end
 
 

@@ -3,7 +3,7 @@ local Banking = {}
 Banking.isInATM = false
 
 function Banking:SetupATMs(ATMs)
-    for k, atm in pairs(ATMs) do
+--[[     for k, atm in pairs(ATMs) do
         local point = Core.CreateMarker({
             coords = atm.location,
             distance = 150.0,
@@ -41,7 +41,7 @@ function Banking:SetupATMs(ATMs)
         function point:onExit()
             self:hidePrompt()
         end
-    end
+    end ]]
 end
 
 
@@ -56,7 +56,7 @@ function Banking:OpenATM(account, card, cardNumber)
         Input.SetMouseEnabled(true)
         Input.SetInputEnabled(false)
         self.uiATM:CallEvent("OpenATM", JSON.stringify(account), JSON.stringify(card), cardNumber)
-    end, 500)
+    end, 250)
 end
 
 function Banking:ClostATM()
@@ -107,6 +107,9 @@ function Banking:Transfer(transferData)
         return
     end
 
+    if string.len(transferData.iban) > 10 then
+        transferData.type = 'card'
+    end
 
     Events.CallRemote('Banking:ServerEvent', 'transfer', transferData)
 end
