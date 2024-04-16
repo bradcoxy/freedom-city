@@ -11,18 +11,18 @@ function Fishing.InitZones(zones, mongers, fish)
             marker = {
                 type = 'pco-markers::SM_MarkerCylinder',
             },
-            text = {
-                text = 'Press [F] to start fishing.'
+            prompt = {
+                text = 'Start Fishing',
+                key = 'F'
             },
             interactions = 'F'
         })
         point:showMarker()
-
         function point:nearby()
             if isBusy then return end
 
             if self.currentDistance <= 150.0 then
-                self:showText()
+                self:showPrompt()
 
                 if self:isKeyJustReleased('F') then
                     if Client.GetLocalPlayer():GetControlledCharacter():GetVehicle() then
@@ -30,22 +30,33 @@ function Fishing.InitZones(zones, mongers, fish)
                         return
                     end
 
-                    isBusy = true
-                    Events.CallRemote('Fishing:Start', zoneName)
+                    local reelSound = Sound(Vector(), "package://fishing/Client/spinningreel.ogg", true)
+                    reelSound:FadeIn(1, 0.8)
 
-                    self:hideText()
+                    Timer.SetTimeout(function ()
+                        if math.random(1, 100) <= 80 then
+                            Core.ShowNotification('Caught a fish in the line.')
+                            Events.CallRemote('Fishing:Start', zoneName)
+                        else
+                            Core.ShowNotification('No fish caught the line.')
+                        end
+                    end, 2000)
+
+                    isBusy = true
+                    Core.ShowNotification('Casted a line.')
+                    self:hidePrompt()
                     Timer.SetTimeout(function()
-                        self:showText()
+                        self:showPrompt()
                         isBusy = false
-                    end, 3000)
+                    end, 3500)
                 end
             else
-                self:hideText()
+                self:hidePrompt()
             end
         end
 
         function point:onExit()
-            self:hideText()
+            self:hidePrompt()
         end
     end
 
@@ -56,8 +67,9 @@ function Fishing.InitZones(zones, mongers, fish)
             marker = {
                 type = 'pco-markers::SM_MarkerCylinder',
             },
-            text = {
-                text = 'Press [F] to sell fish.'
+            prompt = {
+                text = 'Sell Fish',
+                key = 'F'
             },
             interactions = 'F'
         })
@@ -66,7 +78,7 @@ function Fishing.InitZones(zones, mongers, fish)
             if isBusy then return end
 
             if self.currentDistance <= 150.0 then
-                self:showText()
+                self:showPrompt()
 
                 if self:isKeyJustReleased('F') then
                     if Client.GetLocalPlayer():GetControlledCharacter():GetVehicle() then
@@ -74,22 +86,25 @@ function Fishing.InitZones(zones, mongers, fish)
                         return
                     end
 
-                    isBusy = false
-                    Fishing:CreateMenuPrices()
+                    self:hidePrompt()
                     isBusy = true
+                    --Fishing:CreateMenuPrices()
+                    Events.CallRemote('Fishing:GetFish')
+                    isBusy = false
                 end
             else
-                self:hideText()
+                self:hidePrompt()
             end
         end
 
         function point:onExit()
-            self:hideText()
+            self:hidePrompt()
         end
     end
 end
 
-function Fishing:CreateMenuPrices()
+function Fishing.CreateMenuPrices(hasFish)
+    local self = Fishing
     local availableFish = {}
 
     for fishId, fish in pairs(self.Fish) do
@@ -101,6 +116,8 @@ function Fishing:CreateMenuPrices()
         availableFish[#availableFish+1] = {label = fish.label.." $"..price.." +"..fish.current_price_inc.."%", value = fishId}
     end
 
+    print('on sell fish', HELIXTable.Dump(Core.PlayerData))
+
     Core.OpenMenu("select", {
         title = "Fish Selling",
         description = "",
@@ -108,7 +125,7 @@ function Fishing:CreateMenuPrices()
     }, function(selection, selectionMenu)
         selectionMenu.close()
         local fishToSell = Fishing.Fish[selection.value]
-        local hasFish = 10 -- hardcoded
+        local limitOfFish = hasFish[selection.value] or 0
         local price = fishToSell.price
 
         if fishToSell.current_price_inc > 0 then
@@ -117,11 +134,11 @@ function Fishing:CreateMenuPrices()
 
         Core.OpenMenu('input', {
             title = "Fish Selling",
-            description = ("Enter the amount of %s you want to sell (each $%s). You have %s pieces."):format(fishToSell.label, price, hasFish),
+            description = ("Enter the amount of %s you want to sell (each $%s). You have %s pieces."):format(fishToSell.label, price, limitOfFish),
             inputType = 'number' -- optional
         }, function(amount, amountMenu)
             if not amount then Core.ShowNotification("Please enter a valid number") return end
-            if amount> hasFish then Core.ShowNotification("Please enter a valid number within the limit") return end
+            if amount > limitOfFish then Core.ShowNotification("Please enter a valid number within the limit") return end
 
             Events.CallRemote('Fishing:Sell', {fish = selection.value, amount = amount})
             amountMenu.close()
@@ -136,3 +153,4 @@ function Fishing:CreateMenuPrices()
 end
 
 Events.SubscribeRemote('Fishing:ZonesMongersFish', Fishing.InitZones)
+Events.SubscribeRemote('Fishing:SellC', Fishing.CreateMenuPrices)

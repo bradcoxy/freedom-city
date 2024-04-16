@@ -7,7 +7,7 @@ Fishing.Zones = {
         coords =  Vector(1703.5999755859, -3789.5, 5.0),
         rotator = Rotator(0.0, 360, 0.0),
         size = 5,
-        chance = 50,
+        chance = 90,
         fish = {
             -- different types of fish.
             'tuna',
@@ -21,7 +21,7 @@ Fishing.Zones = {
         coords = Vector(1703.5, -5829.8999023438, 5.0),
         rotator = Rotator(0.0, 360, 0.0),
         size = 5,
-        chance = 50,
+        chance = 90,
         fish = {
             'tilapia',
             'cod',
@@ -72,19 +72,16 @@ function Fishing.StartFishing(player, zone)
 
     if randomChance <= fishChance then
         fishCaught = currentZone.fish[randomFish]
-        print('fish caught in line : '..fishCaught)
-    end
-
-    if not fishCaught then
-        xPlayer.showNotification('You couldn\'t catch anything, try again.')
-        return
     end
 
     Timer.SetTimeout(function ()
+        if not fishCaught then
+            xPlayer.showNotification('The fish escaped, try again.')
+            return
+        end
         xPlayer.showNotification(('You caught %s.'):format(Fishing.Fish[fishCaught].label))
-        -- allows the player to fish again
-        Events.CallRemote('Fishing:ClientEvent', player, 'finished_fishing')
-    end, 3000)
+        xPlayer.inventory.AddItem(fishCaught, math.random(1, 5))
+    end, 2000)
 end
 
 function Fishing.SellFish(player, fishData)
@@ -104,6 +101,29 @@ function Fishing.SellFish(player, fishData)
     xPlayer.addMoney(price)
     xPlayer.showNotification('You sold '..fishToSell.label..' for $'..price..'.')
     --- Remove the item
+    for _, value in pairs(xPlayer.inventory.itemRegistry[fishData.fish]) do
+        local item = xPlayer.inventory.GetSlot(value.slot, value.type)
+        if item.count >= amount then
+            xPlayer.inventory.RemoveItem(item.name, amount, item.metadata, item.slot, value.type)
+        end
+    end
+    --- Incorporate this inside inventory class ^^^.
+end
+
+function Fishing.GetFish(player)
+    if not player then return end
+
+    local xPlayer = Core.GetPlayerFromId(player:GetID())
+    local has = {}
+
+    for fish in pairs(Fishing.Fish) do
+        local found = xPlayer.inventory.GetItem(fish)
+        if found  then
+            local item = xPlayer.inventory.GetSlot(found.slot, found.type)
+            has[fish] = has[fish] and has[fish] + item.count or item.count
+        end
+    end
+    xPlayer.call('Fishing:SellC', has)
 end
 
 Package.Subscribe('Load', function()
@@ -117,10 +137,26 @@ Package.Subscribe('Load', function()
         ped:AddSkeletalMeshAttached('footwear', 'helix::SK_Man_Boots_17')
         ped:SetInvulnerable(true)
     end
+
+    for fishName, fish in pairs(Fishing.Fish) do
+        Core.CreateItem({
+            [fishName] = {
+                label = fish.label,
+                unique = true,
+                description = string.format('A %s', fish.label),
+                type = 'item',
+            }
+        })
+    end
+
+    for key, value in pairs(Player.GetPairs()) do
+        Events.CallRemote('Fishing:ZonesMongersFish', value, Fishing.Zones, Fishing.Mongers, Fishing.Fish)
+    end
 end)
 
 Events.SubscribeRemote('Fishing:Start', Fishing.StartFishing)
 Events.SubscribeRemote('Fishing:Sell', Fishing.SellFish)
-Player.Subscribe('Ready', function(self)
+Events.SubscribeRemote('Fishing:GetFish', Fishing.GetFish)
+Events.Subscribe('core:playerSpawned', function(self)
     Events.CallRemote('Fishing:ZonesMongersFish', self, Fishing.Zones, Fishing.Mongers, Fishing.Fish)
 end)

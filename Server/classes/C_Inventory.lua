@@ -246,7 +246,7 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
         
         for k, v in ipairs(self.itemRegistry[item]) do
             print('looping')
-            return self.slots[v], v
+            return v --self.slots[v], v
         end
     end
 
