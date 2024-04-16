@@ -287,7 +287,7 @@ Events.SubscribeRemote('multicharacter:SaveCharacter', function(player, characte
         
         --char:SetFlyingMode(false)
         --char:SetInputEnabled(true)
-        
+        UpdatePlayer(Core.GetPlayerFromId(player:GetID()), character_data, charid)
         
         Events.CallRemote("multicharacter:RemoveRoom", player)
         Events.CallRemote("pcrp-core:SpawnMenu", player, true)
@@ -337,14 +337,14 @@ function UpdatePlayer(xPlayer, data, charid)
 
     if xPlayer then
         if data[1] then data = data[1] end
-        local name = data.firstname .. " " .. data.lastname
+        local name = string.format('%s %s', data.firstname or data.first_name, data.lastname or data.last_name)
 
         xPlayer.setName(name)
 
-        xPlayer.set('firstName', data.firstname)
+        xPlayer.set('firstName', data.firstname or data.first_name)
         xPlayer.set('charId', data.charid or charid or 1)
-        xPlayer.set('lastName', data.lastname)
-        xPlayer.set('dateofbirth', data.birthdate)
+        xPlayer.set('lastName', data.lastname or data.last_name)
+        xPlayer.set('dateofbirth', data.birthdate or data.date_of_birth)
         xPlayer.set('gender', data.gender)
         xPlayer.set('nationality', data.nationality)
     end
