@@ -1,0 +1,5 @@
+LicenseTypes = {
+    ['driving_license'] = {
+        
+    }
+}

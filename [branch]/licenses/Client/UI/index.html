@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+
+<body>
+
+  <div class="card">
+    <div class="avatar-slot">
+      <img src="" alt="" class="avatar">
+    </div>
+    <div class="info">
+      <div class="id">
+        <h1>ID</h1>
+        <p>123 456 789</p>
+      </div>
+      <h1>Jhon, Oils</h1>
+      <p class="address">2345 Anywhere Street</p>
+      <p class="state">Place, State, 12222</p>
+      <div class="dates dob">
+        <h1>DOB</h1>
+        <span>19/01/1901</span>
+      </div>
+      <div class="dates issued">
+        <h1>Issued</h1>
+        <span>19/01/1901</span>
+      </div>
+      <div class="dates expires">
+        <h1>Expires</h1>
+        <span>19/01/1901</span>
+      </div>
+    </div>
+    <div class="class">
+      <h1>class</h1>
+      <div>
+        <p>D</p>
+      </div>
+    </div>
+    <p class="leyend">Freedom City</p>
+    <img src="" alt="" class="avatar-transparent">
+    <p class="signature"></p>
+  </div>
+
+
+  <script>
+    const showDriverLicense = () => {
+      document.querySelector('.card').style.opacity = "1"
+    }
+
+    const hideDriverLicense = () => {
+      document.querySelector('.card').style.opacity = "0"
+    }
+
+    const setDriverLicense = (data) => {
+      let { licenseNumber, firstName, lastName, address, state, dob, issueDate, expireDate, class: classType } = data;
+
+      document.querySelector('.id p').innerHTML = licenseNumber;
+      document.querySelector('h1').innerHTML = firstName + ', ' + lastName;
+      document.querySelector('.info>h1').innerHTML = firstName + ', ' + lastName;
+      document.querySelector('.address').innerHTML = address;
+      document.querySelector('.state').innerHTML = state;
+      document.querySelector('.dob span').innerHTML = dob;
+      document.querySelector('.issued span').innerHTML = issueDate;
+      document.querySelector('.expires span').innerHTML = expireDate;
+      document.querySelector('.class div p').innerHTML = classType;
+    }
+
+    const setAvatarImage = (imgData64) => {
+      document.querySelector('.avatar').src = imgData64;
+      document.querySelector('.avatar-transparent').src = imgData64;
+    }
+
+    const setSignature = signature => {
+      document.querySelector('.signature').innerHTML = signature;
+    }
+
+    const data = {
+      licenseNumber: '938 637 182',
+      firstName: 'Dobby',
+      lastName: 'Fait',
+      address: '2355 Wherewhere Street',
+      state: 'SuperPlace, SuperState, 13322',
+      dob: '25/02/1971',
+      issueDate: '24/01/1951',
+      expireDate: '23/04/1921',
+      class: 'A'
+    }
+
+    setDriverLicense(data);
+
+    Events.Subscribe("showdrvLicense", function (license) {
+      let licenseData = JSON.parse(license)
+      setDriverLicense(licenseData);
+      setAvatarImage(licenseData.characterImage);
+      setSignature(licenseData.firstName + ' ' + licenseData.lastName);
+
+      showDriverLicense();
+
+      setTimeout(() => {
+        hideDriverLicense();
+      }, 15000);
+    });
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css?family=Outfit:100,300,400,500,700,900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Homemade+Apple&display=swap');
+
+    .card {
+      position: absolute;
+      left: 70%;
+      top: 30%;
+      transform: translate(-50%, -50%) translateY(0vh) scale(var(--scale));
+      width: 590px;
+      height: 370px;
+      background-image: url(./media/card-base.png);
+      border-radius: 30px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      transition: all .3s ease;
+      opacity: 0;
+    }
+
+    .card.hidden {
+      transform: translate(-50%, -50%) translateY(100vh);
+    }
+
+    .card .info>div {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card .info {
+      position: absolute;
+      left: 30%;
+      top: 28%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: start;
+      gap: 0;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    h2 {
+      margin: 0;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .card .id h1 {
+      font-family: Outfit;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 18px;
+      letter-spacing: 0em;
+      text-align: left;
+      color: rgba(32, 42, 56, 1);
+
+    }
+
+    .card .id p {
+      font-family: Outfit;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 18px;
+      letter-spacing: 0em;
+      text-align: left;
+      color: rgba(110, 126, 144, 1);
+      margin-left: 6px;
+    }
+
+    .card>h1 {
+      font-family: Outfit;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 23px;
+      letter-spacing: 0em;
+      text-align: left;
+
+      color: rgba(32, 42, 56, 1);
+      margin: 6px 0;
+    }
+
+    .card .address {
+      font-family: Outfit;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 18px;
+      letter-spacing: 0em;
+      text-align: left;
+      color: rgba(66, 79, 94, 1);
+      margin-top: 6px;
+    }
+
+    .card .state {
+      font-family: Outfit;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 18px;
+      letter-spacing: 0em;
+      text-align: left;
+      color: rgba(110, 126, 144, 1);
+      margin-bottom: 8px;
+    }
+
+    .card .dates h1 {
+      font-family: Outfit;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 18px;
+      letter-spacing: 0em;
+      text-align: left;
+      color: rgba(32, 42, 56, 1);
+    }
+
+    .card .dates span {
+      font-family: Outfit;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 18px;
+      letter-spacing: 0em;
+      text-align: left;
+      color: rgba(66, 79, 94, 1);
+      margin-left: 6px;
+    }
+
+    .card .class {
+      position: absolute;
+      right: 6%;
+      top: 28%;
+      gap: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card .class h1 {
+      font-family: Outfit;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 14px;
+      letter-spacing: 0em;
+      text-align: right;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-transform: uppercase;
+    }
+
+    .card .class div {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 30px;
+      height: 30px;
+      top: 104px;
+      left: 525px;
+      border-radius: 6px;
+      border: 1.5px;
+      background-color: rgba(32, 43, 56, 1);
+      font-family: Outfit;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 14px;
+      letter-spacing: 0em;
+      text-align: center;
+      color: rgba(255, 255, 255, 1);
+    }
+
+    .dates {
+      display: flex;
+      justify-content: start;
+      align-items: center;
+    }
+
+    .avatar-slot {
+      position: absolute;
+      left: 35px;
+      top: 102px;
+      width: 120px;
+      height: 166px;
+      border-radius: 14px;
+      overflow: hidden;
+      border-radius: 14px;
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.35);
+    }
+
+    .avatar-slot>div {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .avatar-slot img {
+      position: absolute;
+      height: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .avatar-transparent {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      margin: 55px 35px;
+      width: 30px;
+      width: 68px;
+      height: 94px;
+      overflow: hidden;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      opacity: 0.4;
+      box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.35);
+    }
+
+    .leyend {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      margin: 45px 75px;
+      color: #22408B;
+      font-family: Outfit;
+      font-size: 16px;
+      font-style: normal;
+      font-weight: 700;
+      line-height: normal;
+    }
+
+    .signature {
+      position: absolute;
+      bottom: 40px;
+      right: 70px;
+      /* margin: 45px 35px; */
+      transform: translateX(50%);
+      font-family: Homemade Apple;
+      color: #132a63;
+      font-size: 14px;
+    }
+
+    @media screen and (max-width: 4000px) {
+      body {
+        --scale: 1.5;
+      }
+    }
+
+    @media screen and (max-width: 3000px) {
+      body {
+        --scale: 1.4;
+      }
+    }
+
+    @media screen and (max-width: 2560px) {
+      body {
+        --scale: 1.3;
+      }
+    }
+
+    @media screen and (max-width: 2100px) {
+      body {
+        --scale: 1.2;
+      }
+    }
+
+    @media screen and (max-width: 2020px) {
+      body {
+        --scale: 1;
+      }
+    }
+
+    @media screen and (max-width: 1520px) {
+      body {
+        --scale: 0.9;
+      }
+    }
+
+    @media screen and (max-width: 1324px) {
+      body {
+        --scale: 0.87;
+      }
+    }
+
+    @media screen and (max-width: 1124px) {
+      body {
+        --scale: 0.8;
+      }
+    }
+
+    @media screen and (max-width: 1024px) {
+      body {
+        --scale: 0.7;
+      }
+    }
+
+    @media screen and (max-width: 900px) {
+      body {
+        --scale: 0.6;
+      }
+    }
+
+    @media screen and (max-width: 800px) {
+      body {
+        --scale: 0.5;
+      }
+    }
+  </style>
+
+</body>
+
+</html>
