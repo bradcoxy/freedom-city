@@ -9,6 +9,7 @@ RoleplayCommands.AllowedCommands = {
     'yell',
     'rules'
 }
+
 RoleplayCommands.Alternatives = {
     ['o'] = 'ooc',
     ['lo'] = 'looc',
@@ -17,6 +18,71 @@ RoleplayCommands.Alternatives = {
     ['m'] = 'me'
 }
 
+RoleplayCommands.OffensiveWords = {
+    ['nigger'] = true,
+    ['negro'] = true,
+    ['nigga'] = true,
+    ['niggga'] = true,
+    ['gay'] = true,
+    ['cocksucker'] = true,
+    ['fag'] = true,
+    ['faggot'] = true,
+    ['gayrope'] = true,
+    ['lesbo'] = true,
+    ['batty'] = true,
+    ['batty boy'] = true,
+    ['cunt'] = true,
+    ['cuntboy'] = true,
+    ['groomer'] = true,
+    ['shemale'] = true,
+    ['racist'] = true,
+    ['racism'] = true,
+    ['rape'] = true,
+    ['anti-black'] = true,
+    ['chink'] = true,
+    ['bitch'] = true,
+    ['whore'] = true,
+    ['slut'] = true,
+    ['dick'] = true,
+    ['pussy'] = true,
+    ['gip'] = true,
+    ['slave'] = true,
+    ['gypsy'] = true,
+    ['hitler'] = true,
+}
+
+function RoleplayCommands.FilteredMessage(letters)
+    local ret = ''
+
+    for _, letter in pairs(letters) do
+        ret = ret .. letter
+    end
+
+    return ret
+end
+
+function RoleplayCommands.Filter(message)
+    local messageCopy = (message):lower()
+    local letters = {}
+
+    for i = 1, string.len(message), 1 do
+        letters[#letters + 1] = string.sub(message, i, i)
+    end
+
+    for word in pairs(RoleplayCommands.OffensiveWords) do
+        for ins in string.gmatch(messageCopy, word) do
+            local x, y = string.find(messageCopy, ins)
+            if x and y then
+                for i = x, y, 1 do
+                    letters[i] = '*'
+                end
+                messageCopy = (RoleplayCommands.FilteredMessage(letters)):lower()
+            end
+        end
+    end
+
+    return RoleplayCommands.FilteredMessage(letters)
+end
 
 function RoleplayCommands.OOC(player, message, alternative)
     local xPlayer = Core.GetPlayerFromId(player:GetID())
@@ -25,7 +91,9 @@ function RoleplayCommands.OOC(player, message, alternative)
 	local ooc = (message):match(pattern)
 
     if ooc then
-        Chat.BroadcastMessage(('<red>[OOC]</> <blue>%s</> %s'):format(name, ooc))
+        Timer.SetTimeout(function ()
+            Chat.BroadcastMessage(('<red>[OOC]</> <blue>%s</> %s'):format(name, RoleplayCommands.Filter(ooc)))
+        end, 150)
     end
 end
 
@@ -37,17 +105,19 @@ function RoleplayCommands.LOOC(player, message, alternative)
 	local looc = (message):match(pattern)
 
     if looc then
-        for _, otherPlayer in pairs(Player.GetPairs()) do
-            if otherPlayer:GetControlledCharacter() and not (otherPlayer:GetID() == player:GetID()) then
-                local otherPlayerLocation = otherPlayer:GetControlledCharacter():GetLocation()
-                local distanceBetween = otherPlayerLocation:Distance(playerLocation)
-
-                if distanceBetween <= 10000 then
-                    Chat.SendMessage(otherPlayer, ('<red>[LOOC]</> <blue>%s</> %s'):format(name, looc))
+        Timer.SetTimeout(function ()
+            for _, otherPlayer in pairs(Player.GetPairs()) do
+                if otherPlayer:GetControlledCharacter() and not (otherPlayer:GetID() == player:GetID()) then
+                    local otherPlayerLocation = otherPlayer:GetControlledCharacter():GetLocation()
+                    local distanceBetween = otherPlayerLocation:Distance(playerLocation)
+    
+                    if distanceBetween <= 10000 then
+                        Chat.SendMessage(otherPlayer, ('<red>[LOOC]</> <blue>%s</> %s'):format(name, RoleplayCommands.Filter(looc)))
+                    end
                 end
             end
-        end
-        Chat.SendMessage(player, ('<red>[LOOC]</> <blue>%s</> %s'):format(name, looc))
+            Chat.SendMessage(player, ('<red>[LOOC]</> <blue>%s</> %s'):format(name, RoleplayCommands.Filter(looc)))
+        end, 150)
     end
 end
 
@@ -59,17 +129,19 @@ function RoleplayCommands.YELL(player, message, alternative)
 	local yell = (message):match(pattern)
 
     if yell then
-        for _, otherPlayer in pairs(Player.GetPairs()) do
-            if otherPlayer:GetControlledCharacter() and not (otherPlayer:GetID() == player:GetID()) then
-                local otherPlayerLocation = otherPlayer:GetControlledCharacter():GetLocation()
-                local distanceBetween = otherPlayerLocation:Distance(playerLocation)
-
-                if distanceBetween <= 5000 then
-                    Chat.SendMessage(otherPlayer, ('<red>%s</> <yellow>yells</> "%s"'):format(name, yell))
+        Timer.SetTimeout(function ()
+            for _, otherPlayer in pairs(Player.GetPairs()) do
+                if otherPlayer:GetControlledCharacter() and not (otherPlayer:GetID() == player:GetID()) then
+                    local otherPlayerLocation = otherPlayer:GetControlledCharacter():GetLocation()
+                    local distanceBetween = otherPlayerLocation:Distance(playerLocation)
+    
+                    if distanceBetween <= 5000 then
+                        Chat.SendMessage(otherPlayer, ('<red>%s</> <yellow>yells</> "%s"'):format(name, RoleplayCommands.Filter(yell)))
+                    end
                 end
             end
-        end
-        Chat.SendMessage(player, ('<red>%s</> <yellow>yells</> "%s"'):format(name, yell))
+            Chat.SendMessage(player, ('<red>%s</> <yellow>yells</> "%s"'):format(name, RoleplayCommands.Filter(yell)))
+        end, 150)
     end
 end
 
@@ -81,17 +153,19 @@ function RoleplayCommands.ME(player, message, alternative)
 	local me = (message):match(pattern)
 
     if me then
-        for _, otherPlayer in pairs(Player.GetPairs()) do
-            if otherPlayer:GetControlledCharacter() and not (otherPlayer:GetID() == player:GetID()) then
-                local otherPlayerLocation = otherPlayer:GetControlledCharacter():GetLocation()
-                local distanceBetween = otherPlayerLocation:Distance(playerLocation)
-
-                if distanceBetween <= 1500 then
-                    Chat.SendMessage(otherPlayer, ('<red>%s</> says "%s"'):format(name, me))
+        Timer.SetTimeout(function ()
+            for _, otherPlayer in pairs(Player.GetPairs()) do
+                if otherPlayer:GetControlledCharacter() and not (otherPlayer:GetID() == player:GetID()) then
+                    local otherPlayerLocation = otherPlayer:GetControlledCharacter():GetLocation()
+                    local distanceBetween = otherPlayerLocation:Distance(playerLocation)
+    
+                    if distanceBetween <= 1500 then
+                        Chat.SendMessage(otherPlayer, ('<red>%s</> says "%s"'):format(name, RoleplayCommands.Filter(me)))
+                    end
                 end
             end
-        end
-        Chat.SendMessage(player, ('<red>%s</> says "%s"'):format(name, me))
+            Chat.SendMessage(player, ('<red>%s</> says "%s"'):format(name, RoleplayCommands.Filter(me)))
+        end, 150)
     end
 end
 
@@ -103,17 +177,19 @@ function RoleplayCommands.WHISPER(player, message, alternative)
 	local whisper = (message):match(pattern)
 
     if whisper then
-        for _, otherPlayer in pairs(Player.GetPairs()) do
-            if otherPlayer:GetControlledCharacter() and not (otherPlayer:GetID() == player:GetID()) then
-                local otherPlayerLocation = otherPlayer:GetControlledCharacter():GetLocation()
-                local distanceBetween = otherPlayerLocation:Distance(playerLocation)
+        Timer.SetTimeout(function ()
+            for _, otherPlayer in pairs(Player.GetPairs()) do
+                if otherPlayer:GetControlledCharacter() and not (otherPlayer:GetID() == player:GetID()) then
+                    local otherPlayerLocation = otherPlayer:GetControlledCharacter():GetLocation()
+                    local distanceBetween = otherPlayerLocation:Distance(playerLocation)
 
-                if distanceBetween <= 500 then
-                    Chat.SendMessage(otherPlayer, ('<red>%s</> <yellow>whispers</> "%s"'):format(name, whisper))
+                    if distanceBetween <= 500 then
+                        Chat.SendMessage(otherPlayer, ('<red>%s</> <yellow>whispers</> "%s"'):format(name, RoleplayCommands.Filter(whisper)))
+                    end
                 end
             end
-        end
-        Chat.SendMessage(player, ('<red>%s</> <yellow>whispers</> "%s"'):format(name, whisper))
+            Chat.SendMessage(player, ('<red>%s</> <yellow>whispers</> "%s"'):format(name, RoleplayCommands.Filter(whisper)))
+        end, 150)
     end
 end
 
@@ -143,18 +219,20 @@ function RoleplayCommands.WD(player, message)
     end
 
     if whisper then
-        for _, otherPlayer in pairs(Player.GetPairs()) do
-            if otherPlayer:GetControlledCharacter() and not (otherPlayer:GetID() == player:GetID()) then
-                local otherPlayerLocation = otherPlayer:GetControlledCharacter():GetLocation()
-                local distanceBetween = otherPlayerLocation:Distance(playerLocation)
-
-                if distanceBetween <= 3000 then
-                    Chat.SendMessage(otherPlayer, ('<red>%s</> is whispering to <blue>%s</>'):format(name, targetPlayer.getName()))
+        Timer.SetTimeout(function ()
+            for _, otherPlayer in pairs(Player.GetPairs()) do
+                if otherPlayer:GetControlledCharacter() and not (otherPlayer:GetID() == player:GetID()) then
+                    local otherPlayerLocation = otherPlayer:GetControlledCharacter():GetLocation()
+                    local distanceBetween = otherPlayerLocation:Distance(playerLocation)
+    
+                    if distanceBetween <= 3000 then
+                        Chat.SendMessage(otherPlayer, ('<red>%s</> is whispering to <blue>%s</>'):format(name, targetPlayer.getName()))
+                    end
                 end
             end
-        end
-        Chat.SendMessage(player, ('<red>%s</> whispers "%s"'):format(name, whisper))
-        Chat.SendMessage(targetPlayer, ('<red>%s</> whispers "%s"'):format(name, whisper))
+            Chat.SendMessage(player, ('<red>%s</> whispers "%s"'):format(name, RoleplayCommands.Filter(whisper)))
+            Chat.SendMessage(targetPlayer, ('<red>%s</> whispers "%s"'):format(name, RoleplayCommands.Filter(whisper)))
+        end, 150)
     end
 end
 
@@ -177,4 +255,6 @@ Chat.Subscribe("PlayerSubmit", function(message, player)
             end
         end
     end
+
+    return false
 end)

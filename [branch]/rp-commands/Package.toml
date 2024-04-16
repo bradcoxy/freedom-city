@@ -1,9 +1,9 @@
 # vault configurations
 [meta]
     # friendly name
-    title =                 "admin"
+    title =                 "rp-commands"
     # contributors
-    author =                "Kravs"
+    author =                "Yamie"
     # version
     version =               "0.0.1"
 
