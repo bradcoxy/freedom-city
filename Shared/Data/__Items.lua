@@ -370,6 +370,12 @@ Core.Items = {
         type = 'item'
     },
 
+    ['lockpick'] = {
+        label = 'Lockpick',
+        unique = false,
+        description = "A lockpicking set ready to break into something valuable.",
+        type = 'item'
+    },
     --
 
     ['ziptie'] = {

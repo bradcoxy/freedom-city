@@ -552,6 +552,19 @@ Core.Items = {
           ["description"] = "A shiny set of keys that unlocks a door to a home."
      },
 
+
+     ['lockpick'] = {
+          ["name"] = "lockpick",
+          ["label"] = "Lockpick",
+          ["weight"] = 0.2,
+          ["unique"] = false,
+          ["type"] = "item",
+          ["image"] = "giftcard.png",
+          ["useable"] = false,
+          ["description"] = "A lockpicking set ready to break into something valuable."
+     },
+
+
      --
 
 
