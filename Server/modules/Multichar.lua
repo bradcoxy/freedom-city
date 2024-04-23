@@ -211,7 +211,7 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
         --char:SetFlyingMode(false)
         --char:SetInputEnabled(true)
 
-        char:SetLocation(Vector(-3860,2330,100) or Vector(0, 0, 1000)) -- THIS CHANGES SPAWN POSITION?
+        char:SetLocation(Vector(40619,63438,600) or Vector(0, 0, 1000)) -- THIS CHANGES SPAWN POSITION?
         char:SetCapsuleSize(20, 92)
 
         --give nametag feck it
