@@ -12,6 +12,7 @@
 -------------------------------------
 ---   [UI]   -----------
 -------------------------------------
+Package.Require('PhysicsGun.lua')
 
 local AdminMenu = {}
 
@@ -95,6 +96,11 @@ AdminMenu.UI:Subscribe("RevivePlayer", function(playerIdentifier)
     else
         -- notify that target is not online
     end
+end)
+
+AdminMenu.UI:Subscribe("TogglePhysicsGun", function ()
+    print('physics gun ', physicsToggle)
+    physicsToggle = not physicsToggle
 end)
 
 AdminMenu.UI:Subscribe("KickPlayer", function(playerIdentifier, reason)

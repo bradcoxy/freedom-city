@@ -132,10 +132,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-document.querySelector('#ban-button').addEventListener('click', () => {
-  console.log('click on ban')
-  Events.Call("BanPlayer", selectedPlayer.identifier);
-});
+  document.querySelector('#ban-button').addEventListener('click', () => {
+    Events.Call("BanPlayer", selectedPlayer.identifier);
+  });
+
+  document.querySelector('#physicsguntoggle').addEventListener('click', () => {
+    Events.Call("TogglePhysicsGun");
+  });
 
   document.querySelector('.set-job').addEventListener('click', () => {
     const job = document.getElementById('jobName').value.trim();

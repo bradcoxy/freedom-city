@@ -1,3 +1,5 @@
+Package.Require('PhysicsGun.lua')
+
 local AdminMenu = {}
 AdminMenu.activeBans = {}
 
