@@ -18,37 +18,99 @@ RoleplayCommands.Alternatives = {
     ['m'] = 'me'
 }
 
+RoleplayCommands.EmergencyServices = {
+    ['911'] = {
+        ['police'] = true,
+        ['ambulance'] = true
+    }
+}
+
 RoleplayCommands.OffensiveWords = {
-    ['nigger'] = true,
-    ['negro'] = true,
-    ['nigga'] = true,
-    ['niggga'] = true,
-    ['gay'] = true,
-    ['cocksucker'] = true,
-    ['fag'] = true,
-    ['faggot'] = true,
-    ['gayrope'] = true,
-    ['lesbo'] = true,
-    ['batty'] = true,
-    ['batty boy'] = true,
-    ['cunt'] = true,
-    ['cuntboy'] = true,
-    ['groomer'] = true,
-    ['shemale'] = true,
-    ['racist'] = true,
-    ['racism'] = true,
-    ['rape'] = true,
-    ['anti-black'] = true,
-    ['chink'] = true,
-    ['bitch'] = true,
-    ['whore'] = true,
-    ['slut'] = true,
-    ['dick'] = true,
-    ['pussy'] = true,
-    ['gip'] = true,
-    ['slave'] = true,
-    ['gypsy'] = true,
-    ['hitler'] = true,
+    ['NIGGER'] = true,
+    ['NEGRO'] = true,
+    ['NIGGA'] = true,
+    ['GAY'] = true,
+    ['GAYROPE'] = true,
+    ['LESBO'] = true,
+    ['BATTY'] = true,
+    ['BATTY BOY'] = true,
+    ['CUNTBOY'] = true,
+    ['GROOMER'] = true,
+    ['SHEMALE'] = true,
+    ['RAPE'] = true,
+    ['CHINK'] = true,
+    ['WHORE'] = true,
+    ['SLUT'] = true,
+    ['GIP'] = true,
+    ['SLAVE'] = true,
+    ['GYPSY'] = true,
+    ['HITLER'] = true,
+    ['ANAL'] = true,
+    ['ANUS'] = true,
+    ['ASS'] = true,
+    ['ASSHOLE'] = true,
+    ['BADASS'] = true,
+    ['BALLSACK'] = true,
+    ['BASTARD'] = true,
+    ['BITCH'] = true,
+    ['BLOWJOB'] = true,
+    ['BONER'] = true,
+    ['BONG'] = true,
+    ['BULLSHIT'] = true,
+    ['BUTTSECS'] = true,
+    ['BUTTSEX'] = true,
+    ['CHOAD'] = true,
+    ['CHODE'] = true,
+    ['CIRCLEJERK'] = true,
+    ['CLIT'] = true,
+    ['COCK'] = true,
+    ['COCKBLOCK'] = true,
+    ['COCKSUCK'] = true,
+    ['COCKSUCKER'] = true,
+    ['COOTCH'] = true,
+    ['CORNHOLE'] = true,
+    ['CRACKWHORE'] = true,
+    ['CUM'] = true,
+    ['CUMMING'] = true,
+    ['CUNT'] = true,
+    ['CK'] = true,
+    ['D!IC'] = true,
+    ['DICK'] = true,
+    ['DICKBRICK'] = true,
+    ['DILDO'] = true,
+    ['DOUCHEBAG'] = true,
+    ['DUMBASS'] = true,
+    ['ERECTION'] = true,
+    ['FAEG'] = true,
+    ['FAG'] = true,
+    ['FAGGOT'] = true,
+    ['FAHGOT'] = true,
+    ['FCUK'] = true,
+    ['FGT'] = true,
+    ['FUC'] = true,
+    ['FUCK'] = true,
+    ['FUHK'] = true,
+    ['FUK'] = true,
+    ['FUQ'] = true,
+    ['GANGBANG'] = true,
+    ['GOD'] = true,
+    ['JIZZ'] = true,
+    ['NEGGA00'] = true,
+    ['NIGS21'] = true,
+    ['NIPPLE'] = true,
+    ['NIPPLES'] = true,
+    ['PENIS'] = true,
+    ['PHCK'] = true,
+    ['PHUC'] = true,
+    ['PHUCK'] = true,
+    ['PHUK'] = true,
+    ['PISSING'] = true,
+    ['PORN'] = true,
+    ['PORNHUB'] = true,
+    ['PORNO'] = true,
+    ['POTHEAD'] = true,
+    ['PUSSAY'] = true,
+    ['PUSSY'] = true,
 }
 
 function RoleplayCommands.FilteredMessage(letters)
@@ -66,7 +128,7 @@ function RoleplayCommands.Filter(message)
     local letters = {}
 
     for i = 1, string.len(message), 1 do
-        letters[#letters + 1] = string.sub(message, i, i)
+        letters[#letters + 1] = string.upper(message, i, i)
     end
 
     for word in pairs(RoleplayCommands.OffensiveWords) do
@@ -236,23 +298,52 @@ function RoleplayCommands.WD(player, message)
     end
 end
 
+function RoleplayCommands.Emergency(player, message, service)
+    if not player then return end
+    if not message then return end
+    if not RoleplayCommands.EmergencyServices[service] then return end
+
+    local xPlayer = Core.GetPlayerFromId(player:GetID())
+    local services = RoleplayCommands.EmergencyServices[service]
+    local pattern = '^/'.. service ..'%s(.+)'
+
+	message = (message):match(pattern)
+
+    local call = {
+        location = xPlayer.character:GetLocation(),
+        message = message
+    }
+
+    for _, yPlayer in pairs(Player.GetPairs()) do
+        local zPlayer = Core.GetPlayerFromId(yPlayer:GetID())
+        if (services[zPlayer.job.name]) then
+            print('found service personel')
+            Events.Call("freedom-city:Police:ReportCrime", call)
+        end
+    end
+    print(HELIXTable.Dump(call))
+end
+
 ---- rp commands logic
 Chat.Subscribe("PlayerSubmit", function(message, player)
-    local found = false
     for _, command in pairs(RoleplayCommands.AllowedCommands) do
         if (message):find('^/'.. command) then
             RoleplayCommands[(command):upper()](player, message)
-            found = true
             return false
         end
     end
 
-    if not found then
-        for alternative, command in pairs(RoleplayCommands.Alternatives) do
-            if (message):find('^/'.. alternative) then
-                RoleplayCommands[(command):upper()](player, message, alternative)
-                return false
-            end
+    for alternative, command in pairs(RoleplayCommands.Alternatives) do
+        if (message):find('^/'.. alternative) then
+            RoleplayCommands[(command):upper()](player, message, alternative)
+            return false
+        end
+    end
+
+    for command in pairs(RoleplayCommands.EmergencyServices) do
+        if (message):find('^/'.. command) then
+            RoleplayCommands.Emergency(player, message, command)
+            return false
         end
     end
 
