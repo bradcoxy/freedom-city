@@ -1,23 +1,22 @@
 local Banking = {}
-
+local isBusy = false
 Banking.isInATM = false
 
-function Banking:SetupATMs(ATMs)
---[[     for k, atm in pairs(ATMs) do
+
+function Banking.SetupBranches(Branches)
+    for k, branch in pairs(Branches) do
         local point = Core.CreateMarker({
-            coords = atm.location,
+            coords = branch.location,
             distance = 150.0,
             marker = {
                 type = 'pco-markers::SM_MarkerArrow',
             },
             prompt = {
-                text = 'Access ATM',
+                text = 'Access Bank',
                 key = 'F'
             },
             interactions = 'F'
         })
-
-        point:showMarker()
 
         function point:nearby()
             if isBusy then return end
@@ -27,11 +26,8 @@ function Banking:SetupATMs(ATMs)
 
                 if self:isKeyJustReleased('F') then
                     isBusy = true
-
-                    Core.RemoveInteraction("F")
-                    Events.CallRemote('Banking:ServerEvent', 'open_atm')
-
-                    isBusy = false
+                    Events.CallRemote('Banking:OpenBranch')
+                    self:hidePrompt()
                 end
             else
                 self:hidePrompt()
@@ -41,7 +37,7 @@ function Banking:SetupATMs(ATMs)
         function point:onExit()
             self:hidePrompt()
         end
-    end ]]
+    end
 end
 
 
@@ -57,6 +53,155 @@ function Banking:OpenATM(account, card, cardNumber)
         Input.SetInputEnabled(false)
         self.uiATM:CallEvent("OpenATM", JSON.stringify(account), JSON.stringify(card), cardNumber)
     end, 250)
+end
+
+function Banking.SelectTransferAmount(balance)
+    Core.OpenMenu("input", {
+        title = "BANKING",
+        description = ("Specify the transfer amount. Balance: $%s"):format(balance),
+        inputType = 'number',
+    }, function(amount, menu)
+        if amount <= 0 or type(amount) ~= "number" then Core.ShowNotification('Please provide a valid number.') return end
+        if amount > balance then Core.ShowNotification('You do not have that balance.') return end
+
+        menu.close()
+
+        Core.OpenMenu("input", {
+            title = "BANKING",
+            description = "Specify the IBAN you want to transfer to.",
+            inputType = 'string',
+        }, function(iban, ibm)
+            if string.len(iban) > 10 then Core.ShowNotification('IBAN is not longer than 10 characters.') return end
+
+            Events.CallRemote('Banking:Transfer', {
+                amount = amount,
+                type = 'iban',
+                iban = iban
+            })
+
+            isBusy = false
+            ibm.close()
+        end, function(ibm)
+            isBusy = false
+            ibm.close()
+        end)
+    end, function(menu)
+        isBusy = false
+        menu.close()
+    end)
+end
+
+function Banking.DepositChecking(cash)
+    Core.OpenMenu("input", {
+        title = "BANKING",
+        description = ("Specify the amount you want to deposit. Cash: $%s"):format(cash),
+        inputType = 'number',
+    }, function(amount, ibm)
+        if amount <= 0 or type(amount) ~= "number" then Core.ShowNotification('Please provide a valid number.') return end
+        if amount > cash then Core.ShowNotification('You do not have that cash.') return end
+
+        Events.CallRemote('Banking:Deposit', {
+            amount = amount,
+            type = 'checking',
+        })
+
+        isBusy = false
+        ibm.close()
+    end, function(ibm)
+        isBusy = false
+        ibm.close()
+    end)
+end
+
+function Banking.WithdrawChecking(balance)
+    Core.OpenMenu("input", {
+        title = "BANKING",
+        description = ("Specify the amount you want to withdraw. Balance: $%s"):format(balance),
+        inputType = 'number',
+    }, function(amount, wbm)
+        if amount <= 0 or type(amount) ~= "number" then Core.ShowNotification('Please provide a valid number.') return end
+        if amount > balance then Core.ShowNotification('You do not have that balance.') return end
+
+        Events.CallRemote('Banking:Withdraw', {
+            amount = amount,
+        })
+
+        isBusy = false
+        wbm.close()
+    end, function(wbm)
+        isBusy = false
+        wbm.close()
+    end)
+end
+
+function Banking.SelectLoadAmount(balance)
+    if (balance < 0) then
+        Core.ShowNotification('You cannot take any loans at the moment.')
+        return
+    end
+
+    local eligibleAmount = math.floor(balance / 4)
+    Core.OpenMenu("input", {
+        title = "BANKING",
+        description = ("Specify the load amount. Eligible: $%s"):format(eligibleAmount),
+        inputType = 'number',
+    }, function(amount, menu)
+        if amount <= 0 or type(amount) ~= "number" then Core.ShowNotification('Please provide a valid number.') return end
+        if amount > balance then Core.ShowNotification('You are not eligible for that.') return end
+
+        Events.CallRemote('Banking:Loan', amount)
+
+        isBusy = false
+        menu.close()
+    end, function(menu)
+        isBusy = false
+        menu.close()
+    end)
+end
+
+function Banking.OpenBranch(account, cash)
+    if not account then return end
+
+    Core.OpenMenu('select', {
+        title = 'BANKING',
+        description = ('Checking Account: $%s'):format(account.balances.checking),
+        elements = {
+            {
+                label = 'Deposit',
+                value = 'deposit'
+            },
+            {
+                label = 'Withdraw',
+                value = 'withdraw'
+            },
+            {
+                label = 'Transfer',
+                value = 'transferBalance'
+            },
+            {
+                label = 'Take Loan',
+                value = 'takeLoan'
+            }
+        },
+    }, function(data, menu)
+        menu.close()
+
+        if (data.value == 'transferBalance') then
+            Banking.SelectTransferAmount(account.balances.checking)
+        elseif (data.value == 'withdraw') then
+            Banking.WithdrawChecking(account.balances.checking)
+        elseif (data.value == 'deposit') then
+            Banking.DepositChecking(cash)
+        elseif (data.value == 'takeLoan') then
+            Banking.SelectLoadAmount(account.balances.checking)
+        end
+
+        isBusy = false
+    end, function(menu)
+        isBusy = false
+        menu.close()
+    end)
+    print('open branch', HELIXTable.Dump(account))
 end
 
 function Banking:ClostATM()
@@ -84,7 +229,7 @@ function Banking:Deposit(depositData)
         return
     end
 
-    Events.CallRemote('Banking:ServerEvent', 'deposit', depositData)
+    Events.CallRemote('Banking:Deposit', depositData)
 end
 
 function Banking:Withdraw(withdrawData)
@@ -111,7 +256,7 @@ function Banking:Transfer(transferData)
         transferData.type = 'card'
     end
 
-    Events.CallRemote('Banking:ServerEvent', 'transfer', transferData)
+    Events.CallRemote('Banking:Transfer', transferData)
 end
 
 function Banking:ChangeIBAN(iban)
@@ -185,8 +330,5 @@ Events.SubscribeRemote('Banking:updateData', function(...)
     Banking:Update(...)
 end)
 
-Events.SubscribeRemote('Banking:ClientEvent', function(eventType, eventData)
-    if eventType == 'receive_atms' and eventData then
-        Banking:SetupATMs(eventData)
-    end
-end)
+Events.SubscribeRemote('Banking:OpenBranch', Banking.OpenBranch)
+Events.SubscribeRemote('Banking:ReceiveBranches', Banking.SetupBranches)

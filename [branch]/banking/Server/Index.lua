@@ -10,9 +10,16 @@ Banking.ATMs = {
         label = "South East Park ATM",
     },
 }
+Banking.Branches = {
+    ['north_south_1'] = {
+        location = Vector(-326.142, -530.596, 10.0),
+        rotation = Rotator(0.0, 0.0, 0.0),
+        label = "North South Bank",
+    }
+}
 
 Banking.TaxRate = 10
-Banking.InterestRate = 1.18
+Banking.InterestRate = 6.50
 Banking.MinCardPayment = 15
 
 Package.Subscribe('Load', function()
@@ -28,6 +35,7 @@ Package.Subscribe('Load', function()
                 outcome = {title = 'outcome'},
                 earnings = {title = 'earnings'},
             },
+            loans = account.loans and JSON.parse(account.loans) or {},
             balances = account.balances and JSON.parse(account.balances) or {
                 saving = 0,
                 checking = 0,
@@ -51,16 +59,27 @@ Package.Subscribe('Load', function()
         }
     })
 
-    for _, atm in pairs(Banking.ATMs) do
+    for _, ATM in pairs(Banking.ATMs) do
         local prop = Prop(
-            atm.location,
-            atm.rotation,
+            ATM.location,
+            ATM.rotation,
             'helix::SM_HalfStack_Marshall',
             CollisionType.Normal,
             false,
             GrabMode.Disabled
         )
         prop:SetScale(Vector(1, 1, 1.5))
+    end
+
+    for _, branch in pairs(Banking.Branches) do
+        local ped = Character(branch.location, branch.rotation, 'helix::SK_Male_Chest')
+
+        ped:SetMesh('helix::SK_Man_Outwear_03')
+        ped:AddSkeletalMeshAttached('headwear', 'helix::SK_Male_Head')
+        ped:AddSkeletalMeshAttached('hands', 'helix::SK_Male_Hands')
+        ped:AddSkeletalMeshAttached('bottomwear', 'helix::SK_Man_Pants_09')
+        ped:AddSkeletalMeshAttached('footwear', 'helix::SK_Man_Boots_17')
+        ped:SetInvulnerable(true)
     end
 end)
 
@@ -116,11 +135,9 @@ function Banking:GetClosestATM(player)
 
     for name, atm in pairs(self.ATMs) do
         if characterLocation:Distance(atm.location) <= 200.0 then
-            ret = name
+            return name
         end
     end
-
-    return ret
 end
 
 function Banking:UseCard(player, cardNumber)
@@ -225,6 +242,7 @@ function Banking:PlayerSpawned(player)
             iban = self.GenerateIBAN(),
             number = self.GenerateAccountNumber(),
             transactions = {},
+            loans = {},
             stats = {
                 income = {title = 'income'},
                 outcome = {title = 'outcome'},
@@ -244,7 +262,7 @@ function Banking:PlayerSpawned(player)
 
     self.Accounts[player.charid].id = player.source
     self.IBANs[self.Accounts[player.charid].iban] = player.charid
-    player.call('Banking:ClientEvent', 'receive_atms', self.ATMs)
+    player.call('Banking:ReceiveBranches', self.Branches)
 end
 
 function Banking.GenerateIBAN()
@@ -263,6 +281,17 @@ end
 
 function Banking.GenerateCardNumber()
     return string.format('%s %s %s %s', math.random(1111, 9999), math.random(3452, 9999), math.random(2181, 9999), math.random(2716, 9999))
+end
+
+function Banking.OpenBranch(player)
+    if not player then return end
+
+    local xPlayer = Core.GetPlayerFromId(player:GetID())
+    local account = Banking.Accounts[xPlayer.charid]
+
+    if account then
+        xPlayer.call('Banking:OpenBranch', account, xPlayer.getMoney())
+    end
 end
 
 function Banking:OpenATM(player, cardNumber)
@@ -310,37 +339,155 @@ function Banking:OpenATM(player, cardNumber)
     })
 end
 
-function Banking:SetAccountPIN(player, account)
+function Banking.Loan(player, amount)
     if not player then return end
-    if not account.pin then return end
+    if not amount then return end
 
-    self.Accounts[player.charid].pin = tostring(account.pin)
-    player.showNotification('Your account\'s pin is now ' .. account.pin)
+    local xPlayer = Core.GetPlayerFromId(player:GetID())
+    local account = Banking.Accounts[xPlayer.charid]
+    local transactionID = #account.transactions + 1
+    local amountToPay = math.floor(amount + ((amount * Banking.InterestRate) / 100))
+    local loadID = #account.loans + 1
+
+    if not account then return end
+
+    if (amount > (account.balances.checking / 4)) then
+        return
+    end
+
+    if (#account.loans >= 2) then
+        xPlayer.showNotification('You\'ve already taken out the maximum number of loans.')
+        return
+    end
+
+    xPlayer.addMoney(amount)
+
+    account.name = xPlayer.name
+    account.cash = xPlayer.getMoney()
+    account.loans[loadID] = amountToPay
+    account.transactions[transactionID] = {
+        transactionid = transactionID,
+        accountname = 'Debit',
+        amount = amount,
+        inflow = true,
+    }
+
+    xPlayer.showNotification('You\'ve taken a loan of $'.. amount ..'. Amount you need to pay $'.. amountToPay ..'.')
+    SendLog({
+        ["username"] = "Banking System",
+        ['embeds'] = {
+            {
+                ['title'] = 'Loan Taken',
+                ['fields'] = {
+                    {
+                        ['name'] = 'Bank Account Holder',
+                        ['value'] = xPlayer.getName(),
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'Account ID',
+                        ['value'] = xPlayer.identifier,
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'Character ID',
+                        ['value'] = xPlayer.get('charId'),
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'Amount',
+                        ['value'] = amount,
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'New Balance',
+                        ['value'] = account.balances.checking,
+                        ['inline'] =  true
+                    },
+                }
+            }
+        }
+    })
 end
 
-function Banking:Deposit(player, depositData)
+function Banking.Deposit(player, depositData)
     if not player then return end
     if not depositData.amount then return end
-    if not self.Accounts[player.charid] then return end
 
-    local account = self.Accounts[player.charid]
+
+    local xPlayer = Core.GetPlayerFromId(player:GetID())
+    local account = Banking.Accounts[xPlayer.charid]
     local amount = depositData.amount
     local card = account.cards[depositData.cardNumber]
-    local currentCash = player.getMoney()
+    local currentCash = xPlayer.getMoney()
     local transactionID = #account.transactions + 1
     local statsIncome = account.stats.income.amount or 0
     local totalIncome = statsIncome + amount
 
+    if not account then return end
+
     if currentCash < amount then
-        player.showNotification('You don\'t have enough to deposit.')
+        xPlayer.showNotification('You don\'t have enough to deposit.')
+        return
+    end
+
+    if (depositData.type == 'checking') and not card then
+        account.balances.checking = account.balances.checking + amount
+        xPlayer.removeMoney(amount)
+
+        account.cash = xPlayer.getMoney()
+        account.stats.income.amount = totalIncome
+        account.transactions[transactionID] = {
+            transactionid = transactionID,
+            accountname = 'Deposit into Checking',
+            amount = amount,
+            inflow = true,
+        }
+
+        SendLog({
+            ["username"] = "Banking System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Deposit into Checking Balance',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Bank Account Holder',
+                            ['value'] = xPlayer.getName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Account ID',
+                            ['value'] = xPlayer.identifier,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Character ID',
+                            ['value'] = xPlayer.get('charId'),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Amount',
+                            ['value'] = amount,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'New Balance',
+                            ['value'] = account.balances.checking,
+                            ['inline'] =  true
+                        },
+                    }
+                }
+            }
+        })
+        xPlayer.showNotification(('You\'ve deposited $%s into your checking balance.'):format(amount))
         return
     end
 
     if card then
         card.balance = card.balance + amount
-        player.removeMoney(amount)
+        xPlayer.removeMoney(amount)
 
-        account.cash = player.getMoney()
+        account.cash = xPlayer.getMoney()
         account.stats.income.amount = totalIncome
         account.transactions[transactionID] = {
             transactionid = transactionID,
@@ -349,8 +496,8 @@ function Banking:Deposit(player, depositData)
             inflow = true,
         }
 
-        player.showNotification(('You\'ve deposited $%s into Card %s.'):format(amount, card.lastfour))
-        player.call('Banking:updateData', account, card, depositData.cardNumber)
+        xPlayer.showNotification(('You\'ve deposited $%s into Card %s.'):format(amount, card.lastfour))
+        xPlayer.call('Banking:updateData', account, card, depositData.cardNumber)
         SendLog({
             ["username"] = "Banking System",
             ['embeds'] = {
@@ -359,17 +506,17 @@ function Banking:Deposit(player, depositData)
                     ['fields'] = {
                         {
                             ['name'] = 'Bank Account Holder',
-                            ['value'] = player.getName(),
+                            ['value'] = xPlayer.getName(),
                             ['inline'] =  true
                         },
                         {
                             ['name'] = 'Account ID',
-                            ['value'] = player.identifier,
+                            ['value'] = xPlayer.identifier,
                             ['inline'] =  true
                         },
                         {
                             ['name'] = 'Character ID',
-                            ['value'] = player.get('charId'),
+                            ['value'] = xPlayer.get('charId'),
                             ['inline'] =  true
                         },
                         {
@@ -394,11 +541,11 @@ function Banking:Deposit(player, depositData)
         return
     end
 
-    player.removeMoney(amount)
+    xPlayer.removeMoney(amount)
     account.balances.checking = account.balances.checking + amount
 
-    account.name = player.name
-    account.cash = player.getMoney()
+    account.name = xPlayer.name
+    account.cash = xPlayer.getMoney()
     account.transactions[transactionID] = {
         transactionid = transactionID,
         accountname = 'Credit',
@@ -406,22 +553,24 @@ function Banking:Deposit(player, depositData)
         inflow = true,
     }
     account.stats.income.amount = totalIncome
-    player.call('Banking:ClientEvent', 'updateData', account)
-    player.showNotification('You\'ve deposited $'.. amount ..'.')
+    xPlayer.call('Banking:ClientEvent', 'updateData', account)
+    xPlayer.showNotification('You\'ve deposited $'.. amount ..'.')
     print('total income ', account.stats.income)
 end
 
-function Banking:Withdraw(player, withdrawData)
+function Banking.Withdraw(player, withdrawData)
     if not player then return end
     if not withdrawData.amount then return end
-    if not self.Accounts[player.charid] then return end
 
-    local account = self.Accounts[player.charid]
+    local xPlayer = Core.GetPlayerFromId(player:GetID())
+    local account = Banking.Accounts[xPlayer.charid]
     local card = account.cards[withdrawData.cardNumber]
     local amount = withdrawData.amount
     local transactionID = #account.transactions + 1
     local statsOutcome = account.stats.outcome.amount or 0
     local totalOutcome = statsOutcome + amount
+
+    if not account then return end
 
     if card then
         local balance = card.balance
@@ -429,9 +578,9 @@ function Banking:Withdraw(player, withdrawData)
 
         if balance >= amount then
             card.balance = card.balance - amount
-            player.addMoney(amount)
+            xPlayer.addMoney(amount)
 
-            account.cash = player.getMoney()
+            account.cash = xPlayer.getMoney()
             account.stats.outcome.amount = totalOutcome
             account.transactions[transactionID] = {
                 transactionid = transactionID,
@@ -440,8 +589,8 @@ function Banking:Withdraw(player, withdrawData)
                 inflow = false,
             }
 
-            player.showNotification('You\'ve withdrawed $'.. amount ..'.')
-            player.call('Banking:updateData', account, card, withdrawData.cardNumber)
+            xPlayer.showNotification('You\'ve withdrawed $'.. amount ..'.')
+            xPlayer.call('Banking:updateData', account, card, withdrawData.cardNumber)
             SendLog({
                 ["username"] = "Banking System",
                 ['embeds'] = {
@@ -450,17 +599,17 @@ function Banking:Withdraw(player, withdrawData)
                         ['fields'] = {
                             {
                                 ['name'] = 'Bank Account Holder',
-                                ['value'] = player.getName(),
+                                ['value'] = xPlayer.getName(),
                                 ['inline'] =  true
                             },
                             {
                                 ['name'] = 'Account ID',
-                                ['value'] = player.identifier,
+                                ['value'] = xPlayer.identifier,
                                 ['inline'] =  true
                             },
                             {
                                 ['name'] = 'Character ID',
-                                ['value'] = player.get('charId'),
+                                ['value'] = xPlayer.get('charId'),
                                 ['inline'] =  true
                             },
                             {
@@ -486,14 +635,14 @@ function Banking:Withdraw(player, withdrawData)
         end
 
         if not ((math.abs(balance - amount)) <= limit) then
-            player.showNotification('Amount exceeds card\'s limit.')
+            xPlayer.showNotification('Amount exceeds card\'s limit.')
             return
         end
 
         card.balance = balance - amount
-        player.addMoney(amount)
+        xPlayer.addMoney(amount)
 
-        account.cash = player.getMoney()
+        account.cash = xPlayer.getMoney()
         account.stats.outcome.amount = totalOutcome
         account.transactions[transactionID] = {
             transactionid = transactionID,
@@ -502,8 +651,8 @@ function Banking:Withdraw(player, withdrawData)
             inflow = false,
         }
 
-        player.showNotification('You\'ve withdrawed $'.. amount ..'.')
-        player.call('Banking:updateData', account, card, withdrawData.cardNumber)
+        xPlayer.showNotification('You\'ve withdrawed $'.. amount ..'.')
+        xPlayer.call('Banking:updateData', account, card, withdrawData.cardNumber)
         SendLog({
             ["username"] = "Banking System",
             ['embeds'] = {
@@ -512,17 +661,17 @@ function Banking:Withdraw(player, withdrawData)
                     ['fields'] = {
                         {
                             ['name'] = 'Bank Account Holder',
-                            ['value'] = player.getName(),
+                            ['value'] = xPlayer.getName(),
                             ['inline'] =  true
                         },
                         {
                             ['name'] = 'Account ID',
-                            ['value'] = player.identifier,
+                            ['value'] = xPlayer.identifier,
                             ['inline'] =  true
                         },
                         {
                             ['name'] = 'Character ID',
-                            ['value'] = player.get('charId'),
+                            ['value'] = xPlayer.get('charId'),
                             ['inline'] =  true
                         },
                         {
@@ -548,15 +697,15 @@ function Banking:Withdraw(player, withdrawData)
     end
 
     if account.balances.checking < amount then
-        player.showNotification('You don\'t have enough to withdraw.')
+        xPlayer.showNotification('You don\'t have enough to withdraw.')
         return
     end
 
     account.balances.checking = account.balances.checking - amount
-    player.addMoney(amount)
+    xPlayer.addMoney(amount)
 
-    account.name = player.name
-    account.cash = player.getMoney()
+    account.name = xPlayer.name
+    account.cash = xPlayer.getMoney()
     account.transactions[transactionID] = {
         transactionid = transactionID,
         accountname = 'Debit',
@@ -564,45 +713,221 @@ function Banking:Withdraw(player, withdrawData)
         inflow = false,
     }
     account.stats.outcome.amount = totalOutcome
-    player.call('Banking:ClientEvent', 'updateData', account)
-    player.showNotification('You\'ve withdrawed $'.. amount ..'.')
+    xPlayer.showNotification('You\'ve withdrawed $'.. amount ..'.')
+    SendLog({
+        ["username"] = "Banking System",
+        ['embeds'] = {
+            {
+                ['title'] = 'Withdrawal from Checking',
+                ['fields'] = {
+                    {
+                        ['name'] = 'Bank Account Holder',
+                        ['value'] = xPlayer.getName(),
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'Account ID',
+                        ['value'] = xPlayer.identifier,
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'Character ID',
+                        ['value'] = xPlayer.get('charId'),
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'Amount',
+                        ['value'] = amount,
+                        ['inline'] =  true
+                    },
+                    {
+                        ['name'] = 'New Balance',
+                        ['value'] = account.balances.checking,
+                        ['inline'] =  true
+                    },
+                }
+            }
+        }
+    })
 end
 
-function Banking:Transfer(player, transferData)
+function Banking.Transfer(player, transferData)
     if not player then return end
     if not transferData.amount then return end
-    if not self.Accounts[player.charid] then return end
 
-    local accountSender = self.Accounts[player.charid]
+    print(HELIXTable.Dump(transferData))
+
+    local xPlayer = Core.GetPlayerFromId(player:GetID())
+    local accountSender = Banking.Accounts[xPlayer.charid]
     local card = accountSender.cards[transferData.cardNumber]
+
+    if not accountSender then return end
+
+    if (transferData.type == 'iban') and not card then
+        local transferTo = string.upper(transferData.iban)
+        local transferAmount = transferData.amount
+
+        if (accountSender.iban == transferTo) then
+            xPlayer.showNotification('You cannot transfer to yourself.')
+            return
+        end
+
+        if not Banking.IBANs[transferTo] then
+            xPlayer.showNotification('There is no account with the IBAN : '.. transferTo ..'.')
+            return
+        end
+
+        local receiverCharID = Banking.IBANs[transferTo]
+        local accountReceiver = Banking.Accounts[receiverCharID]
+        local receivingPlayer = Core.GetPlayerFromId(accountReceiver.id)
+
+        if not receivingPlayer then
+            xPlayer.showNotification('You cannot transfer to this account at the moment.')
+            return
+        end
+
+        if (transferAmount > accountSender.balances.checking) then
+            xPlayer.showNotification('You do not have enough balance.')
+            return
+        end
+
+        local receiverStatsIncome = accountReceiver.stats.income.amount or 0
+        local receiverTotalIncome = receiverStatsIncome + transferAmount
+
+        local senderStatsOutcome = accountSender.stats.outcome.amount or 0
+        local senderTotalOutcome = senderStatsOutcome + transferAmount
+
+        accountSender.balances.checking = accountSender.balances.checking  - transferAmount
+        accountReceiver.balances.checking = accountReceiver.balances.checking + transferAmount
+
+        accountSender.transactions[#accountSender.transactions + 1] = {
+            transactionid = #accountSender.transactions + 1,
+            accountname = ('Transferred to Checking %s from Checking %s'):format(accountSender.iban, transferTo),
+            amount = transferAmount,
+            inflow = false,
+        }
+        accountSender.stats.outcome.amount = senderTotalOutcome
+
+        accountReceiver.transactions[#accountReceiver.transactions + 1] = {
+            transactionid = #accountReceiver.transactions + 1,
+            accountname = ('Received to Checking %s from Checking %s'):format(transferTo, accountSender.iban),
+            amount = transferAmount,
+            inflow = true,
+        }
+        accountReceiver.stats.income.amount = receiverTotalIncome
+
+        xPlayer.showNotification('You have transfered $'.. transferAmount ..' from your checking balance.')
+        receivingPlayer.showNotification('You have received $'.. transferAmount ..' to your checking balance.')
+
+        SendLog({
+            ["username"] = "Banking System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Transfer from Checking to Checking',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Bank Account Holder',
+                            ['value'] = xPlayer.getName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Account ID',
+                            ['value'] = xPlayer.identifier,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Character ID',
+                            ['value'] = xPlayer.get('charId'),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Card',
+                            ['value'] = transferData.cardNumber,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Transferred to Account Holder',
+                            ['value'] = receivingPlayer.getName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Amount',
+                            ['value'] = transferAmount,
+                            ['inline'] =  true
+                        },
+                    }
+                }
+            }
+        })
+        SendLog({
+            ["username"] = "Banking System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Received Transfer from Checking to Checking',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Bank Account Holder',
+                            ['value'] = receivingPlayer.getName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Account ID',
+                            ['value'] = receivingPlayer.identifier,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Character ID',
+                            ['value'] = receivingPlayer.get('charId'),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Received from Card',
+                            ['value'] = transferData.cardNumber,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Received from Account Holder',
+                            ['value'] = xPlayer.getName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Amount',
+                            ['value'] = transferAmount,
+                            ['inline'] =  true
+                        },
+                    }
+                }
+            }
+        })
+    end
 
     if card and (transferData.type == 'card') then
         local transferToCardNumber = transferData.iban
-        local transferToCard = self.Cards[transferToCardNumber]
+        local transferToCard = Banking.Cards[transferToCardNumber]
         local transferAmount = transferData.amount
 
         if (transferToCardNumber == transferData.cardNumber) then
-            player.showNotification('You cannot transfer to yourself.')
+            xPlayer.showNotification('You cannot transfer to yourself.')
             return
         end
 
         if not transferToCard then
-            player.showNotification('There is no card with the number : '.. transferToCard ..'.')
+            xPlayer.showNotification('There is no card with the number : '.. transferToCard ..'.')
             return
         end
 
-        local accountReceiver = self.Accounts[transferToCard]
+        local accountReceiver = Banking.Accounts[transferToCard]
         local receivingCard = accountReceiver.cards[transferToCardNumber]
         local receivingPlayer = Core.GetPlayerFromId(accountReceiver.id)
 
         if not receivingPlayer then
-            player.showNotification('You cannot transfer to this card at the moment.')
+            xPlayer.showNotification('You cannot transfer to this card at the moment.')
             return
         end
 
         print('using card to transfer')
         if card.balance < transferAmount then
-            player.showNotification('Your card doesn\'t have enough balance for this transaction.')
+            xPlayer.showNotification('Your card doesn\'t have enough balance for this transaction.')
             return
         end
 
@@ -631,10 +956,10 @@ function Banking:Transfer(player, transferData)
         }
         accountReceiver.stats.income.amount = receiverTotalIncome
 
-        player.showNotification('You have transfered $'.. transferAmount ..' to the card: '.. receivingCard.lastfour ..'.')
+        xPlayer.showNotification('You have transfered $'.. transferAmount ..' to the card: '.. receivingCard.lastfour ..'.')
         receivingPlayer.showNotification('You have received $'.. transferAmount ..' to your card: '.. receivingCard.lastfour ..'.')
 
-        player.call('Banking:updateData', accountSender, card, transferData.cardNumber)
+        xPlayer.call('Banking:updateData', accountSender, card, transferData.cardNumber)
         SendLog({
             ["username"] = "Banking System",
             ['embeds'] = {
@@ -643,17 +968,17 @@ function Banking:Transfer(player, transferData)
                     ['fields'] = {
                         {
                             ['name'] = 'Bank Account Holder',
-                            ['value'] = player.getName(),
+                            ['value'] = xPlayer.getName(),
                             ['inline'] =  true
                         },
                         {
                             ['name'] = 'Account ID',
-                            ['value'] = player.identifier,
+                            ['value'] = xPlayer.identifier,
                             ['inline'] =  true
                         },
                         {
                             ['name'] = 'Character ID',
-                            ['value'] = player.get('charId'),
+                            ['value'] = xPlayer.get('charId'),
                             ['inline'] =  true
                         },
                         {
@@ -708,7 +1033,7 @@ function Banking:Transfer(player, transferData)
                         },
                         {
                             ['name'] = 'Received from Account Holder',
-                            ['value'] = player.getName(),
+                            ['value'] = xPlayer.getName(),
                             ['inline'] =  true
                         },
                         {
@@ -725,180 +1050,7 @@ function Banking:Transfer(player, transferData)
                 }
             }
         })
-        return
     end
-
---[[     local transferTo = string.upper(transferData.iban)
-    local transferAmount = transferData.amount
-
-    if accountSender.iban == transferTo then
-        player.showNotification('You cannot transfer to yourself.')
-        return
-    end
-
-    if not self.IBANs[transferTo] then
-        player.showNotification('There is no account with the IBAN : '.. transferTo ..'.')
-        return
-    end
-
-    local receiverCharID = self.IBANs[transferTo]
-    local accountReceiver = self.Accounts[receiverCharID]
-    local receivingPlayer = Core.GetPlayerFromId(accountReceiver.id)
-
-    if not receivingPlayer then
-        player.showNotification('You cannot transfer to this account at the moment.')
-        return
-    end
-
-    local receiverStatsIncome = accountReceiver.stats.income.amount or 0
-    local receiverTotalIncome = receiverStatsIncome + transferAmount
-
-    local senderStatsOutcome = accountSender.stats.outcome.amount or 0
-    local senderTotalOutcome = senderStatsOutcome + transferAmount
-
-    if card then
-        print('using card to transfer')
-        if card.balance < transferAmount then
-            player.showNotification('Your card doesn\'t have enough balance for this transaction.')
-            return
-        end
-
-        card.balance = card.balance - transferAmount
-        accountReceiver.balances.checking = accountReceiver.balances.checking + transferAmount
-
-        accountSender.transactions[#accountSender.transactions + 1] = {
-            transactionid = #accountSender.transactions + 1,
-            accountname = ('Transferred to %s from Card %s'):format(transferTo, card.lastfour),
-            amount = transferAmount,
-            inflow = false,
-        }
-        accountSender.stats.outcome.amount = senderTotalOutcome
-
-        accountReceiver.transactions[#accountReceiver.transactions + 1] = {
-            transactionid = #accountReceiver.transactions + 1,
-            accountname = ('Received from %s'):format(accountSender.iban),
-            amount = transferAmount,
-            inflow = true,
-        }
-        accountReceiver.stats.income.amount = receiverTotalIncome
-
-        player.showNotification('You have transfered $'.. transferAmount ..' to the IBAN : '.. transferTo ..'.')
-        receivingPlayer.showNotification('You have received $'.. transferAmount ..' from the IBAN : '.. accountSender.iban ..'.')
-
-        player.call('Banking:updateData', accountSender, card, transferData.cardNumber)
-        SendLog({
-            ["username"] = "Banking System",
-            ['embeds'] = {
-                {
-                    ['title'] = 'Transfer from Card',
-                    ['fields'] = {
-                        {
-                            ['name'] = 'Bank Account Holder',
-                            ['value'] = player.getName(),
-                            ['inline'] =  true
-                        },
-                        {
-                            ['name'] = 'Account ID',
-                            ['value'] = player.identifier,
-                            ['inline'] =  true
-                        },
-                        {
-                            ['name'] = 'Character ID',
-                            ['value'] = player.get('charId'),
-                            ['inline'] =  true
-                        },
-                        {
-                            ['name'] = 'Card',
-                            ['value'] = transferData.cardNumber,
-                            ['inline'] =  true
-                        },
-                        {
-                            ['name'] = 'Transferred to account',
-                            ['value'] = transferTo,
-                            ['inline'] =  true
-                        },
-                        {
-                            ['name'] = 'Amount',
-                            ['value'] = transferAmount,
-                            ['inline'] =  true
-                        },
-                    }
-                }
-            }
-        })
-        SendLog({
-            ["username"] = "Banking System",
-            ['embeds'] = {
-                {
-                    ['title'] = 'Received Transfer',
-                    ['fields'] = {
-                        {
-                            ['name'] = 'Bank Account Holder',
-                            ['value'] = receivingPlayer.getName(),
-                            ['inline'] =  true
-                        },
-                        {
-                            ['name'] = 'Account ID',
-                            ['value'] = receivingPlayer.identifier,
-                            ['inline'] =  true
-                        },
-                        {
-                            ['name'] = 'Character ID',
-                            ['value'] = receivingPlayer.get('charId'),
-                            ['inline'] =  true
-                        },
-                        {
-                            ['name'] = 'Received from account',
-                            ['value'] = transferData.cardNumber,
-                            ['inline'] =  true
-                        },
-                        {
-                            ['name'] = 'Received to account',
-                            ['value'] = transferTo,
-                            ['inline'] =  true
-                        },
-                        {
-                            ['name'] = 'Amount',
-                            ['value'] = transferAmount,
-                            ['inline'] =  true
-                        },
-                    }
-                }
-            }
-        })
-        return
-    end
-
-    local senderCurrentBank = accountSender.balances.checking
-    if senderCurrentBank < transferAmount then
-        player.showNotification('Transfer amount exceeds your current balance.')
-        return
-    end
-
-    accountSender.balances.checking = accountSender.balances.checking - accountReceiver
-    accountReceiver.balances.checking = accountReceiver.balances.checking + accountReceiver
-
-    player.showNotification('You have transfered $'.. transferAmount ..' to the IBAN : '.. transferTo ..'.')
-    receivingPlayer.showNotification('You have received $'.. transferAmount ..' from the IBAN : '.. accountSender.iban ..'.')
-
-    accountSender.transactions[#accountSender.transactions + 1] = {
-        transactionid = #accountSender.transactions + 1,
-        accountname = 'Sent to '.. transferTo,
-        amount = transferAmount,
-        inflow = false,
-    }
-    accountSender.stats.outcome.amount = senderTotalOutcome
-
-    accountReceiver.transactions[#accountReceiver.transactions + 1] = {
-        transactionid = #accountReceiver.transactions + 1,
-        accountname = 'Received from '.. accountSender.iban,
-        amount = transferAmount,
-        inflow = true,
-    }
-    accountReceiver.stats.income.amount = receiverTotalIncome
-
-    player.call('Banking:ClientEvent', 'updateData', accountSender)
-    receivingPlayer.call('Banking:ClientEvent', 'updateData', accountReceiver) ]]
 end
 
 function Banking:ChangeIBAN(player, iban)
@@ -971,7 +1123,7 @@ function Banking:ChangePIN(player, pin, cardNumber)
     local account = self.Accounts[player.charid]
     local card =  account.cards[cardNumber]
     local newPIN = tostring(pin)
-    local previousPIN = card.pin 
+    local previousPIN = card.pin
 
     if not card then return end
 
@@ -1032,6 +1184,87 @@ function SendLog(data)
 	HTTP.RequestAsync('https://discord.com', '/api/webhooks/1226893748827455549/CH7TO4toQuJxRBXikoC6vwLZx74ftFdaDw1tL-ymcDzwwFnI5fIWo7t6y68wqXA_zbUC', 'POST', JSON.stringify(data), 'application/json')
 end
 
+function Banking.PayLoan(charId)
+    if not charId then return end
+
+    local account = Banking.Accounts[charId]
+    local xPlayer = Core.GetPlayerFromId(account.id)
+
+    if not xPlayer then return end
+
+    for k, loanLeft in pairs(account.loans) do
+        local minimumPayment = loanLeft > 250 and math.floor(loanLeft / 4) or loanLeft
+        local transactionID = #account.transactions
+        local statsOutcome = account.stats.outcome.amount or 0
+        local totalOutcome = statsOutcome + minimumPayment
+
+        account.balances.checking = account.balances.checking - minimumPayment
+        account.loans[k] = account.loans[k] - minimumPayment
+        account.transactions[transactionID] = {
+            transactionid = transactionID,
+            accountname = 'Debit',
+            amount = minimumPayment,
+            inflow = false,
+        }
+        account.stats.outcome.amount = totalOutcome
+
+        xPlayer.showNotification(('$%s deducted from your checking account as loan payment.'):format(minimumPayment))
+        SendLog({
+            ["username"] = "Banking System",
+            ['embeds'] = {
+                {
+                    ['title'] = 'Money Deducted as Loan Payment',
+                    ['fields'] = {
+                        {
+                            ['name'] = 'Bank Account Holder',
+                            ['value'] = xPlayer.getName(),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Account ID',
+                            ['value'] = xPlayer.identifier,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Character ID',
+                            ['value'] = xPlayer.get('charId'),
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Amount',
+                            ['value'] = minimumPayment,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'New Balance',
+                            ['value'] = account.balances.checking,
+                            ['inline'] =  true
+                        },
+                        {
+                            ['name'] = 'Amount left to pay',
+                            ['value'] = account.loans[k],
+                            ['inline'] =  true
+                        },
+                    }
+                }
+            }
+        })
+
+        if account.loans[k] <= 0 then
+            account.loans[k] = nil
+        end
+    end
+end
+
+Timer.SetInterval(function ()
+    print('pay for loan')
+    for charId, account in pairs(Banking.Accounts) do
+        if account.id and #account.loans > 0 then
+            Banking.PayLoan(charId)
+            print('found account with loan.')
+        end
+    end
+end, (60000 * 60)) -- payment for loans
 
 Events.Subscribe('core:playerSpawned', function(player)
     local xPlayer = Core.GetPlayerFromId(player:GetID())
@@ -1043,6 +1276,14 @@ Events.Subscribe('core:playerSpawned', function(player)
     xPlayer.inventory.AddItem('water', 1)
 end)
 
+
+Package.Subscribe('Load', function ()
+    for k, v in pairs(Player.GetPairs()) do
+        local xPlayer = Core.GetPlayerFromId(v:GetID())
+        Banking:PlayerSpawned(xPlayer)
+    end
+end)
+
 Player.Subscribe("Destroy", function(player)
     local xPlayer = Core.GetPlayerFromId(player:GetID())
 
@@ -1051,11 +1292,11 @@ Player.Subscribe("Destroy", function(player)
     local account = Banking.Accounts[xPlayer.charid]
     if account and (account.isNew) then
         account.isNew = false
-        DB:Execute('INSERT INTO user_banking VALUES (:0, :0, :0, :0, :0, :0, :0)', xPlayer.charid, account.iban, account.number, JSON.stringify(account.transactions), JSON.stringify(account.stats), JSON.stringify(account.balances), JSON.stringify(account.cards))
+        DB:Execute('INSERT INTO user_banking VALUES (:0, :0, :0, :0, :0, :0, :0, :0)', xPlayer.charid, account.iban, account.number, JSON.stringify(account.transactions), JSON.stringify(account.stats), JSON.stringify(account.loans), JSON.stringify(account.balances), JSON.stringify(account.cards))
         return
     end
 
-    DB:Execute('UPDATE user_banking SET iban = :0, transactions = :0, stats = :0, balances = :0, cards = :0 WHERE identifier = :0', account.iban, JSON.stringify(account.transactions), JSON.stringify(account.stats), JSON.stringify(account.balances), JSON.stringify(account.cards), xPlayer.charid)
+    DB:Execute('UPDATE user_banking SET iban = :0, transactions = :0, stats = :0, loans = :0, balances = :0, cards = :0 WHERE identifier = :0', account.iban, JSON.stringify(account.transactions), JSON.stringify(account.stats), JSON.stringify(account.loans), JSON.stringify(account.balances), JSON.stringify(account.cards), xPlayer.charid)
 end)
 
 Events.SubscribeRemote('Banking:ServerEvent',function (player, eventType, eventData)
@@ -1064,23 +1305,7 @@ Events.SubscribeRemote('Banking:ServerEvent',function (player, eventType, eventD
     if eventType == 'open_atm' then
         Banking:OpenATM(xPlayer)
     end
-
-    if eventType == 'set_pin' and eventData then
-        Banking:SetAccountPIN(xPlayer, eventData)
-    end
-
-    if eventType == 'deposit' and eventData then
-        Banking:Deposit(xPlayer, eventData)
-    end
-
-    if eventType == 'withdraw' and eventData then
-        Banking:Withdraw(xPlayer, eventData)
-    end
-
-    if eventType == 'transfer' and eventData then
-        Banking:Transfer(xPlayer, eventData)
-    end
-
+    
     if eventType == 'changeIBAN' and eventData then
         Banking:ChangeIBAN(xPlayer, eventData)
     end
@@ -1090,7 +1315,11 @@ Events.SubscribeRemote('Banking:ServerEvent',function (player, eventType, eventD
     end
 end)
 
-
+Events.SubscribeRemote('Banking:OpenBranch', Banking.OpenBranch)
+Events.SubscribeRemote('Banking:Loan', Banking.Loan)
+Events.SubscribeRemote('Banking:Transfer', Banking.Transfer)
+Events.SubscribeRemote('Banking:Deposit', Banking.Deposit)
+Events.SubscribeRemote('Banking:Withdraw', Banking.Withdraw)
 
 Chat.Subscribe("PlayerSubmit", function(message, player)
     local xPlayer = Core.GetPlayerFromId(player:GetID())
