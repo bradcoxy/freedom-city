@@ -1,4 +1,4 @@
-HELIXVehicle.Subscribe("CharacterEnter", function(vehicle, character, seat)
+Vehicle.Subscribe("CharacterEnter", function(vehicle, character, seat)
 	if seat ~= 0 then
 		return
 	end
@@ -51,7 +51,7 @@ Events.Subscribe("GasStation:RefuelVehicle", function(player, vehicle, addedFuel
 	vehData.setFuel(vehData.getFuel() + addedFuel)
 end)
 
-HELIXVehicle.Subscribe("CharacterLeave", function(vehicle, character, seat)
+Vehicle.Subscribe("CharacterLeave", function(vehicle, character, seat)
 	if seat ~= 0 then
 		return
 	end
@@ -63,11 +63,11 @@ HELIXVehicle.Subscribe("CharacterLeave", function(vehicle, character, seat)
 	vehData.setRunning(false)
 end)
 
-HELIXVehicle.Subscribe("TakeDamage", function(self, damage, bone, type, from_direction, instigator, causer)
+Vehicle.Subscribe("TakeDamage", function(self, damage, bone, type, from_direction, instigator, causer)
 	print('damage taken =>', self, damage, bone, type, from_direction, instigator, causer)
 end)
 
-HELIXVehicle.Subscribe("Hit", function(self, impact_force, normal_impulse, impact_location, velocity)
+Vehicle.Subscribe("Hit", function(self, impact_force, normal_impulse, impact_location, velocity)
 	-- TODO: In future with newer vehicles check if impact was near the engine
 	local vehData = Core.GetVehicleData(self)
 
