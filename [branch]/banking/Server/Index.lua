@@ -23,32 +23,34 @@ Banking.InterestRate = 6.50
 Banking.MinCardPayment = 15
 
 Package.Subscribe('Load', function()
-    local savedAccounts = DB:Select('SELECT * FROM user_banking')
-    for _, account in pairs(savedAccounts) do
+    -- local savedAccounts = DB:Select('SELECT * FROM user_banking')
+    -- for _, account in pairs(savedAccounts) do
 
-        Banking.Accounts[account.identifier] = {
-            iban = account.iban,
-            number = account.number,
-            transactions = account.transactions and JSON.parse(account.transactions) or {},
-            stats = account.stats and JSON.parse(account.stats) or {
-                income = {title = 'income'},
-                outcome = {title = 'outcome'},
-                earnings = {title = 'earnings'},
-            },
-            loans = account.loans and JSON.parse(account.loans) or {},
-            balances = account.balances and JSON.parse(account.balances) or {
-                saving = 0,
-                checking = 0,
-            },
-            cards = account.cards and JSON.parse(account.cards) or {}
-        }
+    --     Banking.Accounts[account.identifier] = {
+    --         iban = account.iban,
+    --         number = account.number,
+    --         transactions = account.transactions and JSON.parse(account.transactions) or {},
+    --         stats = account.stats and JSON.parse(account.stats) or {
+    --             income = {title = 'income'},
+    --             outcome = {title = 'outcome'},
+    --             earnings = {title = 'earnings'},
+    --         },
+    --         loans = account.loans and JSON.parse(account.loans) or {},
+    --         balances = account.balances and JSON.parse(account.balances) or {
+    --             saving = 0,
+    --             checking = 0,
+    --         },
+    --         cards = account.cards and JSON.parse(account.cards) or {}
+    --     }
 
-        for cardNumber in pairs(Banking.Accounts[account.identifier].cards) do
-            Banking.Cards[cardNumber] = account.identifier
-        end
+    --     for cardNumber in pairs(Banking.Accounts[account.identifier].cards) do
+    --         Banking.Cards[cardNumber] = account.identifier
+    --     end
 
-        Banking.IBANs[account.iban] = account.identifier
-    end
+    --     Banking.IBANs[account.iban] = account.identifier
+    -- end
+
+    PersistentDatabase.Create(function () end)
 
     Core.CreateItem({
         ['credit_card'] = {
@@ -233,36 +235,40 @@ function Banking:CardBillingCycle(player)
     end
 end
 
-
-function Banking:PlayerSpawned(player)
+function Banking.PlayerSpawned(player)
     if not player then return end
-    if not self.Accounts[player.charid] then
-        print('account not found')
-        self.Accounts[player.charid] = {
-            iban = self.GenerateIBAN(),
-            number = self.GenerateAccountNumber(),
-            transactions = {},
-            loans = {},
-            stats = {
-                income = {title = 'income'},
-                outcome = {title = 'outcome'},
-                earnings = {title = 'earnings'},
-            },
-            balances = {
-                checking = 0,
-            },
-            cards = {},
-            isNew = true,
-        }
-    end
+
+    PersistentDatabase.GetByKey(string.format('%s_BankAccount', player.charid), function(success, data)
+        data = JSON.parse(data)
+        if success and data then
+            local account = data[1]['value']
+            Banking.Accounts[player.charid] = account or {
+                iban = Banking.GenerateIBAN(),
+                number = Banking.GenerateAccountNumber(),
+                transactions = {},
+                loans = {},
+                stats = {
+                    income = {title = 'income'},
+                    outcome = {title = 'outcome'},
+                    earnings = {title = 'earnings'},
+                },
+                balances = {
+                    checking = 0,
+                },
+                cards = {},
+                isNew = true,
+            }
+
+            Banking.Accounts[player.charid].id = player.source
+            Banking.IBANs[Banking.Accounts[player.charid].iban] = player.charid
+        end
+    end)
 
     Timer.SetTimeout(function ()
-        self:CardBillingCycle(player)
+        Banking:CardBillingCycle(player)
     end, 5000)
 
-    self.Accounts[player.charid].id = player.source
-    self.IBANs[self.Accounts[player.charid].iban] = player.charid
-    player.call('Banking:ReceiveBranches', self.Branches)
+    player.call('Banking:ReceiveBranches', Banking.Branches)
 end
 
 function Banking.GenerateIBAN()
@@ -288,7 +294,8 @@ function Banking.OpenBranch(player)
 
     local xPlayer = Core.GetPlayerFromId(player:GetID())
     local account = Banking.Accounts[xPlayer.charid]
-
+    print(HELIXTable.Dump(Banking.Accounts))
+    print(HELIXTable.Dump(Banking.Accounts[xPlayer.charid]), xPlayer.charid)
     if account then
         xPlayer.call('Banking:OpenBranch', account, xPlayer.getMoney())
     end
@@ -1269,7 +1276,7 @@ end, (60000 * 60)) -- payment for loans
 Events.Subscribe('core:playerSpawned', function(player)
     local xPlayer = Core.GetPlayerFromId(player:GetID())
 
-    Banking:PlayerSpawned(xPlayer)
+    Banking.PlayerSpawned(xPlayer)
 
     xPlayer.inventory.AddItem('begel', 1)
     xPlayer.inventory.AddItem('phone', 1)
@@ -1280,7 +1287,7 @@ end)
 Package.Subscribe('Load', function ()
     for k, v in pairs(Player.GetPairs()) do
         local xPlayer = Core.GetPlayerFromId(v:GetID())
-        Banking:PlayerSpawned(xPlayer)
+        Banking.PlayerSpawned(xPlayer)
     end
 end)
 
@@ -1292,11 +1299,13 @@ Player.Subscribe("Destroy", function(player)
     local account = Banking.Accounts[xPlayer.charid]
     if account and (account.isNew) then
         account.isNew = false
-        DB:Execute('INSERT INTO user_banking VALUES (:0, :0, :0, :0, :0, :0, :0, :0)', xPlayer.charid, account.iban, account.number, JSON.stringify(account.transactions), JSON.stringify(account.stats), JSON.stringify(account.loans), JSON.stringify(account.balances), JSON.stringify(account.cards))
+        --DB:Execute('INSERT INTO user_banking VALUES (:0, :0, :0, :0, :0, :0, :0, :0)', xPlayer.charid, account.iban, account.number, JSON.stringify(account.transactions), JSON.stringify(account.stats), JSON.stringify(account.loans), JSON.stringify(account.balances), JSON.stringify(account.cards))
+        PersistentDatabase.Insert(string.format('%s_BankAccount', xPlayer.charid), JSON.stringify(Banking.Accounts[xPlayer.charid]), function () end)
         return
     end
 
-    DB:Execute('UPDATE user_banking SET iban = :0, transactions = :0, stats = :0, loans = :0, balances = :0, cards = :0 WHERE identifier = :0', account.iban, JSON.stringify(account.transactions), JSON.stringify(account.stats), JSON.stringify(account.loans), JSON.stringify(account.balances), JSON.stringify(account.cards), xPlayer.charid)
+    PersistentDatabase.Update(string.format('%s_BankAccount', xPlayer.charid), JSON.stringify(Banking.Accounts[xPlayer.charid]), function () end)
+    --DB:Execute('UPDATE user_banking SET iban = :0, transactions = :0, stats = :0, loans = :0, balances = :0, cards = :0 WHERE identifier = :0', account.iban, JSON.stringify(account.transactions), JSON.stringify(account.stats), JSON.stringify(account.loans), JSON.stringify(account.balances), JSON.stringify(account.cards), xPlayer.charid)
 end)
 
 Events.SubscribeRemote('Banking:ServerEvent',function (player, eventType, eventData)
