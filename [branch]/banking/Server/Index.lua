@@ -50,8 +50,6 @@ Package.Subscribe('Load', function()
     --     Banking.IBANs[account.iban] = account.identifier
     -- end
 
-    PersistentDatabase.Create(function () end)
-
     Core.CreateItem({
         ['credit_card'] = {
             label = 'Credit Card',
@@ -1314,7 +1312,7 @@ Events.SubscribeRemote('Banking:ServerEvent',function (player, eventType, eventD
     if eventType == 'open_atm' then
         Banking:OpenATM(xPlayer)
     end
-    
+
     if eventType == 'changeIBAN' and eventData then
         Banking:ChangeIBAN(xPlayer, eventData)
     end

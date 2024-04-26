@@ -2,6 +2,8 @@ DB = nil
 
 DB = Database(DatabaseEngine.MySQL, "db=pcrp-core user=root host=localhost")
 
+PersistentDatabase.Create(function () end)
+
 -- Package.Subscribe('Load', function()
 -- end)
 
