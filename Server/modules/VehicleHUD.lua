@@ -1,11 +1,11 @@
 local fuel_interval
 
-HELIXCharacter.Subscribe("EnterVehicle", function(self, vehicle, seat_index)
+Character.Subscribe("EnterVehicle", function(self, vehicle, seat_index)
     local player = self:GetPlayer()
     Core.UpdateFuel(player)
 end)
 
-HELIXCharacter.Subscribe("LeaveVehicle", function(self, vehicle)
+Character.Subscribe("LeaveVehicle", function(self, vehicle)
     local player = self:GetPlayer()
     Core.UpdateFuel(player)
 end)
