@@ -1,6 +1,10 @@
 local InventoryHUD = Core.RegisterHUD('inventory', 'file://ui/modules/inventory/build/index.html')
+
+
 local insert = table.insert
 Core.InventoryOpened = false
+
+inventory_waiting = false;
 
 Events.SubscribeRemote('inventory:ItemAdded', function(item, label, count)
     InventoryHUD.Call('ItemAdded', item, label, count)
@@ -10,7 +14,12 @@ Events.SubscribeRemote('inventory:ItemRemoved', function(item, label, count)
     InventoryHUD.Call('ItemRemoved', item, label, count)
 end)
 
+Events.SubscribeRemote('inventory:CloseInventory', function()
+    CloseInventory()
+end)
+
 InventoryHUD.Subscribe('AttemptSlotMovement', function(data)
+    inventory_waiting = true
     Core.TriggerCallback('inventory:ValidateMovement', function(valid, inv, otherInventories)
         if valid then
 
@@ -21,12 +30,12 @@ InventoryHUD.Subscribe('AttemptSlotMovement', function(data)
                     otherInventories[k] = SanitiseInventory(v)
                 end
             end
-
             InventoryHUD.Call('OpenInventory', {
                 inventoryData = sanitisedInventory,
                 nearbyInventories = otherInventories
             })
         end
+        inventory_waiting = false
     end, data)
 end)
 
@@ -53,7 +62,23 @@ InventoryHUD.Subscribe('GetNearbyPlayers', function()
     InventoryHUD.Call('SendNearbyPlayers', nearbyPlayers)
 end)
 
+-- Used to prevent race problem
+local function CloseInventoryTimer()
+    Timer.SetTimeout(function()
+        if inventory_waiting then
+            CloseInventoryTimer()
+        else
+            CloseInventory()
+        end
+    end, 150)
+end
+
 function CloseInventory()
+    -- If waiting loop until recieved
+    if inventory_waiting then
+        return CloseInventoryTimer()
+    end
+    
     -- Core.BlurScreen(false)
     Core.ShowHUD()
     InventoryHUD.Focus(false, true)
@@ -68,6 +93,7 @@ function OpenInventory(forceOpen)
     InventoryHUD.Focus(true, false)
     Core.InventoryOpened = true
 
+    inventory_waiting = true
     Core.TriggerCallback('inventory:GetInventory', function(inv, otherInvs)
         InventoryHUD.Focus(true, false)
         
@@ -88,8 +114,6 @@ function OpenInventory(forceOpen)
             profile = player:GetAccountIconURL()
         }
 
-        -- print(HELIXTable.Dump(sanitisedInventory))
-
         InventoryHUD.Call('OpenInventory', {
             inventoryData = sanitisedInventory,
             nearbyInventories = otherInvs,
@@ -97,8 +121,9 @@ function OpenInventory(forceOpen)
             forceOpen = true
         })
 
-        print(character:GetHealth())
         InventoryHUD.Call('StatusUpdate', { status = { name = 'health', value = character:GetHealth(), colour = '#FF5555' } })
+
+        inventory_waiting = false
     end, other)
 end
 
@@ -137,6 +162,7 @@ function UseItem(data, closeInv)
 end
 
 function SplitItem(slot, amount)
+    inventory_waiting = true
     Core.TriggerCallback('inventory:SplitItem', function(valid, inv, otherInventories)
         if valid then
             InventoryHUD.Call('inventory:OpenInventory', {
@@ -144,6 +170,7 @@ function SplitItem(slot, amount)
                 nearbyInventories = otherInventories
             })
         end
+        inventory_waiting = false
     end, slot, amount)
 end
 
