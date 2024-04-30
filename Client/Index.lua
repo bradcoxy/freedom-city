@@ -266,8 +266,8 @@ if CoreCFG.Debug then
         self:DrawText(str, Vector2D(width * 0.5, height * 0.15))
     end) ]]
     
-    Console.Subscribe("LogEntry", function(text, type)
+--[[     Console.Subscribe("LogEntry", function(text, type)
         -- LogEntry was called
         Chat.AddMessage(text)
-    end)
+    end) ]]
 end
