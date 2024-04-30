@@ -76,7 +76,7 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
             self.AddItem(v.name, v.count, v.metadata, v.slot, 'pockets')
         end
 
-        self.weight = data.weight or 0;
+        self.weight = data.weight and math.floor(data.weight) or 0;
     end
 
     function self.AddItem(item, count, metadata, slot, extra)
@@ -118,7 +118,7 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
                 self.holder.addMoney(count, true)
             end
 
-            self.weight[1] = self.weight[1] + (itemData.weight * count)
+            self.weight[1] = math.floor(self.weight[1] + (itemData.weight * count))
 
             return
         end
@@ -141,10 +141,10 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
             insert(self.itemRegistry[item], {slot = slot, type = extra})
             
             self[extra][slot] = { name = item, type = itemData.type, count = count, slot = slot, metadata = metadata, label = itemData.label, description = itemData.description, weight = itemData.weight, unique = itemData.unique, rarity = itemData.rarity or 'Common' }
-            self.weight[1] = self.weight[1] + (itemData.weight * count)
+            self.weight[1] = math.floor(self.weight[1] + (itemData.weight * count))
         else
             self[extra][slot].count = self[extra][slot].count + count
-            self.weight[1] = self.weight[1] + (itemData.weight * count)
+            self.weight[1] = math.floor(self.weight[1] + (itemData.weight * count))
         end
 
         if self.holder then
@@ -200,7 +200,7 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
 
 
         self[extra][slot].count = self[extra][slot].count - count
-        self.weight[1] = self.weight[1] - itemData.weight * count
+        self.weight[1] = math.floor(self.weight[1] - itemData.weight * count)
 
         if self[extra][slot].count <= 0 then
             self[extra][slot] = nil
