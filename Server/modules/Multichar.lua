@@ -294,23 +294,6 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
 
     local result = {} --DB:Select("SELECT * FROM user_character_info WHERE " .. str .. " AND cid = :0", cid)
 
-<<<<<<< Updated upstream
-        char:SetGravityEnabled(true)
-        --char:SetFlyingMode(false)
-        --char:SetInputEnabled(true)
-
-        char:SetLocation(Vector(0, 0, 1000))
-        char:SetCapsuleSize(20, 92)
-
-        Events.CallRemote('core:playerSpawned', player, Core.Players[player:GetID()].serialisedVersion)
-        Events.Call('core:playerSpawned', player)
-        Events.BroadcastRemote('core:playerJoinedServer', player)
-        
-        Events.CallRemote("multicharacter:RemoveRoom", player)
-        Events.CallRemote("pcrp-core:SpawnMenu", player, true)
-    end, 0)
-=======
->>>>>>> Stashed changes
 end)
 
 Events.SubscribeRemote('multicharacter:SaveCharacter', function(player, character_data)
