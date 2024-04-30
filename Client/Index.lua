@@ -256,7 +256,7 @@ if CoreCFG.Debug then
       )
       
     -- Subscribes for Update, we can only Draw inside this event
-    DEBUG_COORDS:Subscribe("Update", function(self, width, height)
+--[[     DEBUG_COORDS:Subscribe("Update", function(self, width, height)
         local player = Client.GetLocalPlayer()
         if not player then return end
         player = player:GetCameraLocation()
@@ -264,7 +264,7 @@ if CoreCFG.Debug then
         local str = "X = " .. player.X .. ", Y = " .. player.Y .. ", Z = " .. player.Z
         -- Draws a Text in the middle of the screen
         self:DrawText(str, Vector2D(width * 0.5, height * 0.15))
-    end)
+    end) ]]
     
     Console.Subscribe("LogEntry", function(text, type)
         -- LogEntry was called
