@@ -1,6 +1,7 @@
 local showingChar = nil
 PlayerCharacters = {}
 PlayersSelecting = {}
+PlayerCharactersSaved = {}
 PlayerSelectingCount = 0
 PickingCharacterDimension = 6969
 
@@ -54,6 +55,8 @@ Events.Subscribe('core-multicharacter:PlayerReady', function(player, old_char)
     player:SetDimension(PickingCharacterDimension)
     old_char:SetDimension(PickingCharacterDimension)
 
+    --old_char:SetGravityEnabled(false)
+
     local char = old_char
 
 --[[     char:RemoveAllSkeletalMeshesAttached()
@@ -68,19 +71,61 @@ Events.Subscribe('core-multicharacter:PlayerReady', function(player, old_char)
 
     local xPlayer = Core.GetPlayerFromId(player:GetID())
 
-    local characterIds = DB:Select("SELECT charid FROM users WHERE identifier = :0", xPlayer.identifier)
+--[[     local characterIds = DB:Select("SELECT charid FROM users WHERE identifier = :0", xPlayer.identifier)
     local maxCharacters = DB:Select("SELECT maxcharacters FROM users_maxcharacters WHERE identifier = :0",
         xPlayer.identifier)
 
     if maxCharacters[1] == nil then
         DB:Execute("INSERT INTO users_maxcharacters (identifier, maxcharacters) VALUES (:0, :0)", xPlayer.identifier, 1)
-    end
+    end ]]
+
+    local characterIds = {} --DB:Select("SELECT charid FROM users WHERE identifier = :0", xPlayer.identifier)
+    PersistentDatabase.GetByKey(xPlayer.identifier, function(success, data)
+        data = JSON.parse(data)
+
+        --print(HELIXTable.Dump(data))
+        if success and data[1] then
+            print('hello')
+
+            print(HELIXTable.Dump(data[1]['value']))
+            
+            xPlayer.call('pcrp-core:MulticharacterSetup', {
+                slotsAvailable = data[1]['value']['maxCharacters'] or 0,
+                characters = data[1]['value']['characters'] or {}
+            })
+
+            for charid, character in pairs(data[1]['value']['characters']) do
+                PlayerCharactersSaved[character.charid] = character
+            end
+            --print(characterIds, maxCharacters)
+        end
+
+--[[         for charid in pairs(characterIds) do
+            PersistentDatabase.GetByKey(charid, function (success, data)
+                data = JSON.parse(data)
+                --print(charid, HELIXTable.Dump(data))
+                if success and data[1] then
+                    characterInfo[#characterInfo + 1] = data[1]['value'].charid and data[1]['value']
+                end
+            end)
+        end ]]
+
+--[[         print('now ', HELIXTable.Dump(characterInfo))
+        Timer.SetTimeout(function ()
+            xPlayer.call('pcrp-core:MulticharacterSetup', {
+                slotsAvailable = maxCharacters,
+                characters = characterInfo
+            })
+            xPlayer.call('multichar:SetupRoom', platformPos)
+        end, 5000) ]]
+    end)
+    xPlayer.call('multichar:SetupRoom', platformPos)
     
     -- print("MAX CHARACTERS => ", maxCharacters[1])
-    maxCharacters = (maxCharacters[1] and maxCharacters[1].maxcharacters) or 1
+    -- maxCharacters = (maxCharacters[1] and maxCharacters[1].maxcharacters) or 1
     -- print("MAX CHARACTERS => ", maxCharacters)
     
-    local str = ''
+--[[     local str = ''
     local lenCharacterIds = #characterIds
     for k, v in ipairs(characterIds) do
         if k ~= lenCharacterIds then
@@ -93,16 +138,7 @@ Events.Subscribe('core-multicharacter:PlayerReady', function(player, old_char)
     local characterInfo
     if #str ~= 0 then
         characterInfo = DB:Select("SELECT * FROM user_character_info WHERE " .. str)
-    end
-    
-    local data = {
-        slotsAvailable = maxCharacters,
-        characters = characterInfo
-    }
-    print("CHAR DATA => ", NanosUtils.Dump(data))
-
-    xPlayer.call('multichar:SetupRoom', platformPos)
-    xPlayer.call('pcrp-core:MulticharacterSetup', data)
+    end ]]
 end)
 
 Events.SubscribeRemote('multicharacter:AdjustCamera', function(player, offset, faceCamera)
@@ -126,15 +162,14 @@ Events.SubscribeRemote('multicharacter:UpdateCharacter', function(player, charid
     local char = PlayersSelecting[player].char
 
     -- TODO: Store the characters on the player class or globally to reduce amount of db calls
-    local characterIds = DB:Select("SELECT charid FROM users WHERE identifier = :0 AND charid = :0",
-        player:GetAccountID(), charid)
-    local result = DB:Select("SELECT gender FROM user_character_info WHERE charid = :0", charid)
+    -- local characterIds = DB:Select("SELECT charid FROM users WHERE identifier = :0 AND charid = :0", player:GetAccountID(), charid)
+    -- local result = DB:Select("SELECT gender FROM user_character_info WHERE charid = :0", charid)
 
-    if result[1] == nil then
+--[[     if result[1] == nil then
         return -- Character not available
-    end
+    end ]]
 
-    local isMale = result[1].gender == 'm'
+    --local isMale = result[1].gender == 'm'
 --[[     char:RemoveAllSkeletalMeshesAttached()
 
     local mesh = "helix::SK_Female_Body"
@@ -162,51 +197,104 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
     -- Verify character
 
     -- TODO: Store the characters on the player class or globally to reduce amount of db calls
-    local characterIds = DB:Select("SELECT charid FROM users WHERE identifier = :0", xPlayer.identifier)
+    local characters = {} --DB:Select("SELECT charid FROM users WHERE identifier = :0", xPlayer.identifier)
+    local characterSaved
+--[[     PersistentDatabase.GetByKey(xPlayer.identifier, function(success, data)
+        data = JSON.parse(data)
 
-    local str = ''
-    local lenCharacterIds = #characterIds
-    for k, v in ipairs(characterIds) do
-        if k ~= lenCharacterIds then
-            str = str .. 'charid=\'' .. v.charid .. '\'' .. ' or '
-        else
-            str = str .. 'charid=\'' .. v.charid .. '\''
-        end
-    end
+        if success and data[1] then
+            characters = data[1]['value']['characters']
+            for k, character in pairs(characters) do
+                local charCID = character.charid
+                if (charCID == cid) then ]]
+    characterSaved = PlayerCharactersSaved[cid]
 
-    local result = DB:Select("SELECT * FROM user_character_info WHERE " .. str .. " AND cid = :0", cid)
-
-    if result[1] == nil then
+    if not characterSaved then
         return -- Character not available
     end
+
+    print(HELIXTable.Dump(characterSaved))
 
     PlayersSelecting[player] = nil
     PlayerSelectingCount = PlayerSelectingCount - 1
 
-    xPlayer.setCharId(result[1].charid)
-    UpdatePlayer(xPlayer, result[1], result[1].charid)
+    xPlayer.setCharId(characterSaved.charid)
+    UpdatePlayer(xPlayer, characterSaved, characterSaved.charid)
 
     
     -- Timer.SetTimeout(function()
     --     Events.CallRemote("pcrp-core:SpawnMenu", player, true)
     -- end, 500)
     
-    Timer.SetTimeout(function()
-        player:Possess(char)
+    player:Possess(char)
 
-        -- Subscribe to Death event
-        char:Subscribe("Death", OnPlayerCharacterDeath)
+    -- Subscribe to Death event
+    char:Subscribe("Death", OnPlayerCharacterDeath)
 
-        -- Unsubscribe to Death event if unpossessed (in case we got possessed into another Character)
-        char:Subscribe("UnPossess", function(self)
-            self:Unsubscribe("Death", OnPlayerCharacterDeath)
+    -- Unsubscribe to Death event if unpossessed (in case we got possessed into another Character)
+    char:Subscribe("UnPossess", function(self)
+        self:Unsubscribe("Death", OnPlayerCharacterDeath)
+    end)
+
+    player:SetCameraSocketOffset(Vector())
+
+    player:SetDimension(1)
+    char:SetDimension(1)
+
+    char:SetGravityEnabled(true)
+    --char:SetFlyingMode(false)
+    --char:SetInputEnabled(true)
+
+    char:SetLocation(Vector(40619,63438,600) or Vector(0, 0, 1000)) -- THIS CHANGES SPAWN POSITION?
+    char:SetCapsuleSize(20, 92)
+
+    --give nametag feck it
+    print(HELIXTable.Dump(xPlayer))
+    print(xPlayer.firstname)
+--[[         local nametag = TextRender(Vector(0,0,100),Rotator(),xPlayer.firstname or player:GetAccountName(),Vector(0.2,0.2,0.2),Color(1,1,1),FontType.Roboto,TextRenderAlignCamera.AlignCameraRotation) 
+    nametag:AttachTo(char)
+    nametag:SetRelativeLocation(Vector(0,0,100))
+    nametag:SetTextSettings(0,0,0,TextRenderHorizontalAlignment.Center) ]]
+
+    Events.CallRemote('core:playerSpawned', player, Core.Players[player:GetID()].serialisedVersion)
+    Events.Call('core:playerSpawned', player)
+    Events.BroadcastRemote('core:playerJoinedServer', player)
+    
+    Events.CallRemote("multicharacter:RemoveRoom", player)
+    Events.CallRemote("pcrp-core:SpawnMenu", player, true)
+--[[                     break
+                end
+            end
+        end
+    end)
+ ]]
+--[[     for charid in pairs(characterIds) do
+        PersistentDatabase.GetByKey(charid, function (success, data)
+            data = JSON.parse(data)
+
+            if success and data[1] then
+                local charCID = data[1]['value']['cid']
+
+                if (charCID == cid) then
+                    characterSaved = data[1]['value']
+                end
+            end
         end)
+    end ]]
 
-        player:SetCameraSocketOffset(Vector())
+--[[     local str = ''
+    local lenCharacterIds = #characterIds
+    for k, v in ipairs(characterIds) do
+        if k ~= lenCharacterIds then
+            str = str .. 'charid=\'' .. v .. '\'' .. ' or '
+        else
+            str = str .. 'charid=\'' .. v .. '\''
+        end
+    end ]]
 
-        player:SetDimension(1)
-        char:SetDimension(1)
+    local result = {} --DB:Select("SELECT * FROM user_character_info WHERE " .. str .. " AND cid = :0", cid)
 
+<<<<<<< Updated upstream
         char:SetGravityEnabled(true)
         --char:SetFlyingMode(false)
         --char:SetInputEnabled(true)
@@ -221,6 +309,8 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
         Events.CallRemote("multicharacter:RemoveRoom", player)
         Events.CallRemote("pcrp-core:SpawnMenu", player, true)
     end, 0)
+=======
+>>>>>>> Stashed changes
 end)
 
 Events.SubscribeRemote('multicharacter:SaveCharacter', function(player, character_data)
@@ -231,22 +321,63 @@ Events.SubscribeRemote('multicharacter:SaveCharacter', function(player, characte
     -- Save character to db
     local charid = CreateCharID()
     local identifier = player:GetAccountID()
+    local characterData = {
+        charid = charid,
+        cid = character_data.cid,
+        birthdate = character_data.date_of_birth,
+        firstname = character_data.first_name,
+        lastname = character_data.last_name,
+        nationality = character_data.nationality,
+        gender = character_data.gender and 'm' or 'f'
+    }
+    local userDefault = {
+        characters = {
+            characterData
+        },
+        maxCharacters = 1
+    }
 
-    DB:Execute("INSERT INTO users (charid, identifier, name) VALUES (:0, :0, :0)", function()
-    end, charid, identifier, player:GetName())
-    DB:Execute(
-        "INSERT INTO user_character_info (charid, cid, birthdate, firstname, lastname, nationality, gender) VALUES (:0, :0, :0, :0, :0, :0, :0)",
-        function()
-        end,
-        charid, character_data.cid, character_data.date_of_birth, character_data.first_name,
-        character_data.last_name, character_data.nationality, character_data.gender and 'm' or 'f')
+    -- DB:Execute("INSERT INTO users (charid, identifier, name) VALUES (:0, :0, :0)", function()
+    -- end, charid, identifier, player:GetName())
+    -- DB:Execute(
+    --     "INSERT INTO user_character_info (charid, cid, birthdate, firstname, lastname, nationality, gender) VALUES (:0, :0, :0, :0, :0, :0, :0)",
+    --     function()
+    --     end,
+    --     charid, character_data.cid, character_data.date_of_birth, character_data.first_name,
+    --     character_data.last_name, character_data.nationality, character_data.gender and 'm' or 'f')
 
-    DB:SelectAsync('SELECT * FROM users_maxcharacters WHERE identifier = "' .. identifier .. '"', function(result)
-        if next(result) == nil then
-            DB:Execute("INSERT INTO users_maxcharacters (identifier, maxcharacters) VALUES (:0, :0)", function()
-            end, identifier, 1)
-        end
-    end)
+    -- DB:SelectAsync('SELECT * FROM users_maxcharacters WHERE identifier = "' .. identifier .. '"', function(result)
+    --     if next(result) == nil then
+    --         DB:Execute("INSERT INTO users_maxcharacters (identifier, maxcharacters) VALUES (:0, :0)", function()
+    --         end, identifier, 1)
+    --     end
+    -- end)
+
+    Timer.SetTimeout(function ()
+        PersistentDatabase.GetByKey(identifier, function(success, data)
+            data = JSON.parse(data)
+
+            if success and data[1] then
+                local xPlayer = Core.GetPlayerFromId(player:GetID())
+                local characters = data[1]['value']['characters'] or {}
+                local maxCharacters = data[1]['value']['maxCharacters'] or 0
+
+                characters[charid] = characterData
+                maxCharacters = maxCharacters + 1
+
+                data[1]['value']['characters'] = characters
+                data[1]['value']['maxCharacters'] = maxCharacters
+
+                xPlayer.setCharId(charid)
+                UpdatePlayer(xPlayer, characterData, charid)
+
+                PersistentDatabase.Update(identifier, JSON.stringify(data[1]['value']), function () end)
+            else
+                PersistentDatabase.Insert(identifier, JSON.stringify(userDefault), function () end)
+            end
+        end)
+        PersistentDatabase.Insert(charid, JSON.stringify({exists = true}), function () end)
+    end, 250)
 
     local isMale = character_data.gender
 
@@ -288,7 +419,9 @@ Events.SubscribeRemote('multicharacter:SaveCharacter', function(player, characte
         --char:SetFlyingMode(false)
         --char:SetInputEnabled(true)
         
-        
+        Events.CallRemote('core:playerSpawned', player, Core.Players[player:GetID()].serialisedVersion)
+        Events.Call('core:playerSpawned', player)
+        Events.BroadcastRemote('core:playerJoinedServer', player)
         Events.CallRemote("multicharacter:RemoveRoom", player)
         Events.CallRemote("pcrp-core:SpawnMenu", player, true)
 
@@ -352,16 +485,47 @@ end
 
 --- @brief Function to create a random string for the char id
 function CreateCharID()
-    local UniqueFound = false
     local charId = nil
-    while not UniqueFound do
+    local checkDB = function()
         charId = tostring(Core.GetRandomStr(3) .. Core.GetRandomInt(5)):upper()
-        local result = DB:Select('SELECT COUNT(*) as count FROM users WHERE charid = "' .. charId .. '"')
-        if result[1].count == 0 then
-            UniqueFound = true
-            print('[helix] Char ID: ' .. charId .. ' has been created!')
-        end
+        PersistentDatabase.GetByKey(charId, function(success, data)
+            data = JSON.parse(data)
+
+            if success and data[1] then
+                print('HELLO 1')
+
+                local charIdSaved = data[1]['value']
+                if charIdSaved then
+                    checkDB()
+                end
+            else
+                print('[helix] Char ID: ' .. charId .. ' has been created!')
+            end
+        end)
     end
+    checkDB()
+
+--[[     while not UniqueFound do
+        charId = tostring(Core.GetRandomStr(3) .. Core.GetRandomInt(5)):upper()
+        PersistentDatabase.GetByKey('CharcterIDs', function (success, data)
+            if success and data then
+                data = JSON.parse(data)
+                local charIds = data[1]['value']
+                if not charIds[charId] then
+                    UniqueFound = true
+                    print('[helix] Char ID: ' .. charId .. ' has been created!')
+                end
+            else
+                UniqueFound = true
+                print('[helix] Char ID: ' .. charId .. ' has been created!')
+            end
+        end)
+        -- local result = DB:Select('SELECT COUNT(*) as count FROM users WHERE charid = "' .. charId .. '"')
+        -- if result[1].count == 0 then
+        --     UniqueFound = true
+        --     print('[helix] Char ID: ' .. charId .. ' has been created!')
+        -- end
+    end ]]
     return charId
 end
 

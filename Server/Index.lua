@@ -66,7 +66,7 @@ function OnPlayerSpawn(player)
 	-- TODO:	OPTIMISE USING STORED QUERIES
 	--			ADD SUPPORT FOR ADDITONAL DATA TYPES
 	local plyVars = {}
-	for k, v in pairs(Core.SavedVariables) do
+--[[ 	for k, v in pairs(Core.SavedVariables) do
 		local result = DB:Select(("SELECT %s FROM %s"):format(v.column, v.table))
 		if result[1] and result[1][v.column] then
 			local x = result[1][v.column]
@@ -84,7 +84,7 @@ function OnPlayerSpawn(player)
 		else
 			plyVars[k] = v.default
 		end
-	end
+	end ]]
 
 	local xPlayer = CreatePlayerData(player, plyId, plyIdentifier, plyName, plyAccounts, plyStats, plyXP, plyJob, plySkin, plyVars)
 	Core.Players[plyId] = xPlayer;

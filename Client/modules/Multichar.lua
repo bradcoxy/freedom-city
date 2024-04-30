@@ -60,7 +60,7 @@ Events.SubscribeRemote('multichar:SetupRoom', function(platformPos)
 
     Sky.SetAnimateTimeOfDay(false)
     Sky.SetTimeOfDay(7, 30)
-
+    Input.SetInputEnabled(false)
     local my_light = Light(
         platformPos + Vector(120, 0, 80),
         Rotator(0, 90, 0), -- Relevant only for Rect and Spot light types
@@ -89,6 +89,7 @@ Events.SubscribeRemote('multicharacter:RemoveRoom', function()
     multichar_ui.RemoveHUD()    
     
     Sky.SetAnimateTimeOfDay(true)
+    Input.SetInputEnabled(true)
 end)
 
 function RemoveRoom()

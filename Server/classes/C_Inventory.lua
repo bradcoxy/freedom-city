@@ -64,15 +64,19 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
     end
 
     function self.Update(data)
-        local _data = data.data;
-        local slots = _data.slots;
-        local weight = _data.weight;
-        
+        --local _data = data.data;
+        local slots = data.slots or {};
+        local pockets = data.pockets or {};
+
         for k, v in pairs(slots) do
-            self.AddItem(v.name, v.count, tonumber(k), v.metadata)
+            self.AddItem(v.name, v.count, v.metadata, v.slot, 'slots')
         end
 
-        self.weight = weight;
+        for k, v in pairs(pockets) do
+            self.AddItem(v.name, v.count, v.metadata, v.slot, 'pockets')
+        end
+
+        self.weight = data.weight or 0;
     end
 
     function self.AddItem(item, count, metadata, slot, extra)
@@ -418,13 +422,14 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
             -- slotAmount = slotAmount - 11;
         end
 
-        local save_data = JSON.stringify({ slots = self.slots })
+        --local save_data = JSON.stringify({ slots = self.slots })
 
-        local res = DB:Execute(("INSERT IGNORE INTO `inventory_data` (name, type, data, weight) VALUES ('%s', '%s', '%s', '%s')"):format(id, self.type, save_data, JSON.stringify(self.weight)))
+        -- local res = DB:Execute(("INSERT IGNORE INTO `inventory_data` (name, type, data, weight) VALUES ('%s', '%s', '%s', '%s')"):format(id, self.type, save_data, JSON.stringify(self.weight)))
         
-        if res == 0 then
-            DB:Execute(("UPDATE `inventory_data` SET type = '%s', data = '%s', weight = '%s' WHERE name = '%s'"):format(self.type, save_data, JSON.stringify(self.weight), id))
-        end
+        -- if res == 0 then
+        --     DB:Execute(("UPDATE `inventory_data` SET type = '%s', data = '%s', weight = '%s' WHERE name = '%s'"):format(self.type, save_data, JSON.stringify(self.weight), id))
+        -- end
+        PersistentDatabase.Insert(('%s_Inventory'):format(id), JSON.stringify({slots = self.slots, pockets = self.pockets, weight = self.weight}), function () end)
     end
 
     -- initialised = true
