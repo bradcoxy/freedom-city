@@ -76,7 +76,7 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
             self.AddItem(v.name, v.count, v.metadata, v.slot, 'pockets')
         end
 
-        self.weight = data.weight and math.floor(data.weight) or 0;
+        --self.weight = data.weight and math.floor(data.weight) or 0;
     end
 
     function self.AddItem(item, count, metadata, slot, extra)

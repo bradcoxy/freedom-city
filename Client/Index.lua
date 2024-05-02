@@ -65,7 +65,7 @@ Events.Subscribe("Core:VehicleCreated", function(_, vehiclesSpawned)
 end)
 
 
-HELIXCharacter.Subscribe("EnterVehicle", function(self, vehicle, seat_index)
+Character.Subscribe("EnterVehicle", function(self, vehicle, seat_index)
     local charPly = self:GetPlayer()
 
     if charPly == nil then return end
@@ -81,7 +81,7 @@ HELIXCharacter.Subscribe("EnterVehicle", function(self, vehicle, seat_index)
     Core.ToggleSpeedometer(true)
 end)
 
-HELIXCharacter.Subscribe("LeaveVehicle", function(self, vehicle)
+Character.Subscribe("LeaveVehicle", function(self, vehicle)
     local charPly = self:GetPlayer()
 
     if charPly == nil then return end
@@ -96,7 +96,7 @@ HELIXCharacter.Subscribe("LeaveVehicle", function(self, vehicle)
     Core.ToggleSpeedometer(false)
 end)
 
-HELIXCharacter.Subscribe("HealthChange", function(self, old_health, new_health)
+Character.Subscribe("HealthChange", function(self, old_health, new_health)
     local charPly = self:GetPlayer()
 
     if charPly == nil then return end
@@ -118,7 +118,7 @@ HELIXCharacter.Subscribe("HealthChange", function(self, old_health, new_health)
 end)
 
 
-HELIXCharacter.Subscribe("HealthChange", function(self, old_health, new_health)
+Character.Subscribe("HealthChange", function(self, old_health, new_health)
     InventoryHUD.Call('StatusUpdate', { status = { name = 'health', value = new_health, colour = '#FF5555' } })
 end)
 

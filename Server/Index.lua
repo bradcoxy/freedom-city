@@ -102,7 +102,8 @@ function OnPlayerSpawn(player)
 end
 
 function OnPlayerReady(player)
-	local new_char = HELIXCharacter(Vector(0, 0, 500), Rotator(0, 0, 0), player)
+	--local new_char = HELIXCharacter(Vector(0, 0, 500), Rotator(0, 0, 0), player)
+	local new_char = Character(Vector(0, 0, 500), Rotator(0, 0, 0), "helix::SK_Male")
 	
 	new_char:SetCapsuleSize(20, 90)
 
