@@ -158,10 +158,10 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
     function self.RemoveItem(item, count, metadata, slot, extra)
         slot = tonumber(slot)
 
-        print('called to remove', item, count, metadata, slot, extra)
         if not extra then
             extra = 'slots'
         end
+
         if extra == 'default' then
             extra = 'slots'
         end
