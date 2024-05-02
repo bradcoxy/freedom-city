@@ -477,8 +477,6 @@ function CreateCharID()
             data = JSON.parse(data)
 
             if success and data[1] then
-                print('HELLO 1')
-
                 local charIdSaved = data[1]['value']
                 if charIdSaved then
                     checkDB()
