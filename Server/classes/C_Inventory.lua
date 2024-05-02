@@ -90,7 +90,6 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
         end
 
         local itemData = Core.Items[item]
-        
         if not itemData then
             return print("Item does not exist")
         end
@@ -159,6 +158,7 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
     function self.RemoveItem(item, count, metadata, slot, extra)
         slot = tonumber(slot)
 
+        print('called to remove', item, count, metadata, slot, extra)
         if not extra then
             extra = 'slots'
         end
@@ -168,7 +168,7 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
 
         local itemData = Core.Items[item]
         if not itemData then
-            return print("Item does not exist")
+            return print("Item does not exist here")
         end
 
         if not self.itemRegistry[item] or #self.itemRegistry[item] == 0 then
@@ -204,7 +204,13 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
 
         if self[extra][slot].count <= 0 then
             self[extra][slot] = nil
-            remove(self.itemRegistry[item], registryIdx)
+
+            for k, v in pairs(self.itemRegistry[item]) do
+                if v.slot == slot and v.type == extra then
+                    remove(self.itemRegistry[item], k)
+                    break
+                end
+            end
         end
 
         if self.holder then
