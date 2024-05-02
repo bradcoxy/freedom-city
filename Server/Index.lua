@@ -66,7 +66,7 @@ function OnPlayerSpawn(player)
 	-- TODO:	OPTIMISE USING STORED QUERIES
 	--			ADD SUPPORT FOR ADDITONAL DATA TYPES
 	local plyVars = {}
-	for k, v in pairs(Core.SavedVariables) do
+--[[ 	for k, v in pairs(Core.SavedVariables) do
 		local result = DB:Select(("SELECT %s FROM %s"):format(v.column, v.table))
 		if result[1] and result[1][v.column] then
 			local x = result[1][v.column]
@@ -84,7 +84,7 @@ function OnPlayerSpawn(player)
 		else
 			plyVars[k] = v.default
 		end
-	end
+	end ]]
 
 	local xPlayer = CreatePlayerData(player, plyId, plyIdentifier, plyName, plyAccounts, plyStats, plyXP, plyJob, plySkin, plyVars)
 	Core.Players[plyId] = xPlayer;
@@ -102,8 +102,11 @@ function OnPlayerSpawn(player)
 end
 
 function OnPlayerReady(player)
+	--local new_char = Character(Vector(0, 0, 500), Rotator(0, 0, 0), player)
+	
 	local new_char = Character(Vector(0,0,500),Rotator(),"helix::SK_Male") or HELIXCharacter(Vector(0, 0, 500), Rotator(0, 0, 0), player) or HCharacter(Vector(0, 0, 500), Rotator(0, 0, 0), player)
 	new_char:AddSkeletalMeshAttached("head","helix::SK_Male_Head")
+	
 	new_char:SetCapsuleSize(20, 90)
 
 	if CoreCFG.MulticharEnabled then
@@ -249,7 +252,7 @@ PlayerSaveTimer = Timer.SetInterval(function()
 end, 60000 * 15)
 
 Package.Subscribe("Load", function()
-    for _, character in pairs(HELIXCharacter.GetPairs()) do
+    for _, character in pairs(Character.GetPairs()) do
         local player = character:GetPlayer()
         
 		if player then 

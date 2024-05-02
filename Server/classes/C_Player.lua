@@ -111,7 +111,7 @@ function CreatePlayerData(player, id, identifier, name, accounts, stats, xp, job
     end
 
     function self.save()
-        for k, v in pairs(self.variables) do
+--[[         for k, v in pairs(self.variables) do
             local db_data = Core.SavedVariables[k]
             if db_data then
                 local x
@@ -134,6 +134,18 @@ function CreatePlayerData(player, id, identifier, name, accounts, stats, xp, job
             print(("UPDATE `user_accounts` SET value = %s WHERE charid = '%s' AND account = '%s'"):format(v, self.charid, k))
             local res = DB:Execute(("UPDATE `user_accounts` SET value = %s WHERE charid = '%s' AND account = '%s'"):format(v, self.charid, k))
             print(res)
+        end ]]
+
+
+--[[         print('saving character')
+        print(HELIXTable.Dump(self.serialisedVersion))
+        print('account', HELIXTable.Dump(self.accounts))
+        print('job', HELIXTable.Dump(self.job))
+        print(HELIXTable.Dump(Core.Players[self.player:GetID()]))
+        print(HELIXTable.Dump(t.serialisedVersion)) ]]
+        local finalSave = {}
+        for k, data in pairs(t.serialisedVersion) do
+            print(k, HELIXTable.Dump(data))
         end
 
         self.inventory.Save()

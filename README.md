@@ -3,9 +3,9 @@
 
 ## Overview
 
-Welcome to the dystopian paradise of Freedom City! It is a fork of the official H.E.L.I.X roleplay framework that all can use.
+Welcome to the official H.E.L.I.X roleplay framework!
 
-This project - using our roleplay framework, is the first step to a HELIX Metaverse with Project Oddysseus.
+This project aims to provide a framework to allow easy expansion for users to build roleplay servers, with supported economy and item management as well as many more in-depth features. The framework additionally provides an abstraction layer on top of more complex features to give a more seamless user experience, such as a Vehicle Management System or User Interface Management System.
 
 ## Features
 - Player Class System

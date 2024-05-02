@@ -50,7 +50,7 @@ Core.Items = {
         type = 'food',
         status = { hunger = 10 },
     },
-    ['energydrink'] = {
+    ['energy_drink'] = {
         label = 'Energy Drink',
         unique = false,
         description = "Because adulting is hard, and sometimes you need a can of \"fake it 'til you make it.\"",
@@ -306,93 +306,5 @@ Core.Items = {
         unique = false,
         description = "For hair that deserves a spa day on the go – because even your locks need a vacation.",
         type = 'item'
-    },
-
-    ['gaston'] = {
-        label = 'Gaston',
-        unique = false,
-        description = "The humble Gaston - sleek and simple to use.",
-        type = 'item'
-    },
-
-    ['patriot'] = {
-        label = 'Patriot Assault Rifle',
-        unique = false,
-        description = "A powerful assault rifle known for its reliability and accuracy.",
-        type = 'item'
-    },
-
-    ['roma12'] = {
-        label = 'Roma12',
-        unique = false,
-        description = "A reliable shotgun favored for its versatility and stopping power.",
-        type = 'item'
-    },
-
-    --blackmarket
-
-    ['kal'] = {
-        label = 'KAL',
-        unique = false,
-        description = "A versatile rifle known for its reliability and performance.",
-        type = 'item'
-    },
-
-    ['remi'] = {
-        label = 'Remi',
-        unique = false,
-        description = "A reliable shotgun known for its durability and ease of use.",
-        type = 'item'
-    },
-    
-    ['m77'] = {
-        label = 'M77 SMG',
-        unique = false,
-        description = "A compact submachine gun known for its high rate of fire and close-quarters effectiveness.",
-        type = 'item'
-    },
-    
-
-
-
-    --
-    ['car_keys'] = {
-        label = 'Car Keys',
-        unique = false,
-        description = "A shiny set of keys that open up a Vehicles door.",
-        type = 'item'
-    },
-
-    ['house_keys'] = {
-        label = 'House Keys',
-        unique = false,
-        description = "A shiny set of keys that unlocks a door to a home.",
-        type = 'item'
-    },
-
-    ['lockpick'] = {
-        label = 'Lockpick',
-        unique = false,
-        description = "A lockpicking set ready to break into something valuable.",
-        type = 'item'
-    },
-    --
-
-    ['ziptie'] = {
-        label = 'Zip tie',
-        unique = false,
-        description = "A strong plastic fastener used for holding things together...Or people.",
-        type = 'item'
-    },
-
-    ['handcuffs'] = {
-        label = 'Handcuffs',
-        unique = false,
-        description = "Used to restrain criminals.",
-        type = 'item'
-    },
-
-
-    
-    
+    }
 }
