@@ -432,6 +432,7 @@ function barycentricInterpolation({ x, y }) {
 ]; */
 
 const hardcodedBlips = [
+    /*
     {
         id: 1,
         name: "food",
@@ -486,6 +487,7 @@ const hardcodedBlips = [
         coords: { x: 158913.7, y: -405678.7 },
         imgUrl: "./media/icons/Parking-icon.svg"
     },
+    */
 ];
 setBlips(hardcodedBlips);
 setMapScale(1);
