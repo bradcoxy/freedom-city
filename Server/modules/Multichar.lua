@@ -199,16 +199,7 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
     -- Verify character
 
     -- TODO: Store the characters on the player class or globally to reduce amount of db calls
-    local characters = {} --DB:Select("SELECT charid FROM users WHERE identifier = :0", xPlayer.identifier)
     local characterSaved
---[[     PersistentDatabase.GetByKey(xPlayer.identifier, function(success, data)
-        data = JSON.parse(data)
-
-        if success and data[1] then
-            characters = data[1]['value']['characters']
-            for k, character in pairs(characters) do
-                local charCID = character.charid
-                if (charCID == cid) then ]]
     characterSaved = PlayerCharactersSaved[cid]
 
     if not characterSaved then
@@ -265,8 +256,8 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
     --char:SetFlyingMode(false)
     --char:SetInputEnabled(true)
 
-    --char:SetLocation(Vector(40619, 63438, 600)) -- THIS CHANGES SPAWN POSITION?
-    char:SetLocation(Vector(0, 0, 1000))
+    char:SetLocation(Vector(40619, 63438, 600)) -- THIS CHANGES SPAWN POSITION?
+    --char:SetLocation(Vector(0, 0, 1000))
     char:SetCapsuleSize(20, 92)
 
     --give nametag feck it
