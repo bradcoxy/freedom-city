@@ -199,16 +199,7 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
     -- Verify character
 
     -- TODO: Store the characters on the player class or globally to reduce amount of db calls
-    local characters = {} --DB:Select("SELECT charid FROM users WHERE identifier = :0", xPlayer.identifier)
     local characterSaved
---[[     PersistentDatabase.GetByKey(xPlayer.identifier, function(success, data)
-        data = JSON.parse(data)
-
-        if success and data[1] then
-            characters = data[1]['value']['characters']
-            for k, character in pairs(characters) do
-                local charCID = character.charid
-                if (charCID == cid) then ]]
     characterSaved = PlayerCharactersSaved[cid]
 
     if not characterSaved then
@@ -227,11 +218,9 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
             saved = JSON.parse(saved)
 
             if saved[1] then
-                local xPlayer = Core.GetPlayerFromId(id)
                 local charSaved = saved[1]['value']
                 for k, save in pairs(charSaved) do
                     if xPlayer[k] then
-                        xPlayer[k] = save
                         if (k == 'accounts') then
                             xPlayer.addMoney(save['money'])
                         elseif (k == 'job') then
