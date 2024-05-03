@@ -138,7 +138,7 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
 
         if not self.FindItemInRegistry(item, slot, extra) then
             insert(self.itemRegistry[item], {slot = slot, type = extra})
-            
+
             self[extra][slot] = { name = item, type = itemData.type, count = count, slot = slot, metadata = metadata, label = itemData.label, description = itemData.description, weight = itemData.weight, unique = itemData.unique, rarity = itemData.rarity or 'Common' }
             self.weight[1] = math.floor(self.weight[1] + (itemData.weight * count))
         else
@@ -205,10 +205,14 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
         if self[extra][slot].count <= 0 then
             self[extra][slot] = nil
 
-            for k, v in pairs(self.itemRegistry[item]) do
-                if v.slot == slot and v.type == extra then
-                    remove(self.itemRegistry[item], k)
-                    break
+            if registryIdx then
+                remove(self.itemRegistry[item], registryIdx)
+            else
+                for k, v in pairs(self.itemRegistry[item]) do
+                    if v.slot == slot and v.type == extra then
+                        remove(self.itemRegistry[item], k)
+                        break
+                    end
                 end
             end
         end
@@ -285,14 +289,14 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
         end
 
         for k, v in ipairs(self.itemRegistry[item]) do
-            if v.slot == slot and invType == inv then
+            if v.slot == slot and v.type == inv then
                 return v, k
             end
         end
     end
 
     function self.FindEmptySlot()
-        if self.pockets and not pocketsFull then
+        if self.pockets --[[ and not pocketsFull ]] then
             for i=1, 6 do
                 if not self.pockets[i] then
                     return i, "pockets"
@@ -360,6 +364,7 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
         if (toSlotExtra == 'default') then
             toSlotExtra = 'slots'
         end
+
         if (fromSlotExtra == 'default') then
             fromSlotExtra = 'slots'
         end
@@ -374,7 +379,7 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
 
         for k, v in ipairs(self.itemRegistry[self[fromSlotExtra][fromSlot].name]) do
             if v.slot == fromSlot then
-                self.itemRegistry[self[fromSlotExtra][fromSlot].name][k].slot = toSlotNumber
+                self.itemRegistry[self[fromSlotExtra][fromSlot].name][k].slot = toSlot
                 self.itemRegistry[self[fromSlotExtra][fromSlot].name][k].type = toSlotExtra
                 break
             end

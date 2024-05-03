@@ -251,7 +251,7 @@ PlayerSaveTimer = Timer.SetInterval(function()
 end, 60000 * 15)
 
 Package.Subscribe("Load", function()
-    for _, character in pairs(HELIXCharacter.GetPairs()) do
+    for _, character in pairs(Character.GetPairs()) do
         local player = character:GetPlayer()
         
 		if player then 
