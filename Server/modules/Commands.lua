@@ -17,7 +17,7 @@ function CommandValidation(source, command, arguments)
 	if not arguments or #arguments == 0 then return {} end
 	
 	if not Core.Commands[command] then
-		return print('error: command not found')
+		return
 	end
 
 	local expectedArgs = Core.Commands[command].arguments
@@ -378,8 +378,8 @@ Chat.Subscribe("PlayerSubmit", function(text, player)
 	table.remove(arguments, 1)
 	
 	if not Core.Commands[command] then
-		return xPlayer.showNotification("Command does not exist")
-	end	
+		return
+	end
 	
 	if #arguments > 0 then
 		arguments = CommandValidation(xPlayer.source, command, arguments)

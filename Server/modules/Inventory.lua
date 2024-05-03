@@ -12,7 +12,6 @@ Events.Subscribe('core:playerSpawned', function(player)
 		data = JSON.parse(data)
 		if success and data[1] then
 			xPlayer.inventory.Update(data[1]['value'])
-			print(HELIXTable.Dump(data[1]['value']))
 		end
 	end)
 end)

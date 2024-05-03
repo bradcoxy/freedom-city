@@ -222,12 +222,32 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
 
     xPlayer.setCharId(characterSaved.charid)
     UpdatePlayer(xPlayer, characterSaved, characterSaved.charid)
+    PersistentDatabase.GetByKey(('%s_Saved'):format(characterSaved.charid), function(success, saved)
+        if success then
+            saved = JSON.parse(saved)
 
-    
+            if saved[1] then
+                local xPlayer = Core.GetPlayerFromId(id)
+                local charSaved = saved[1]['value']
+                for k, save in pairs(charSaved) do
+                    if xPlayer[k] then
+                        xPlayer[k] = save
+                        if (k == 'accounts') then
+                            xPlayer.addMoney(save['money'])
+                        elseif (k == 'job') then
+                            xPlayer.setJob(save)
+                        end
+                    else
+                        print('tried to set saved character data on key, not found.', k)
+                    end
+                end
+            end
+        end
+    end)
+
     -- Timer.SetTimeout(function()
     --     Events.CallRemote("pcrp-core:SpawnMenu", player, true)
     -- end, 500)
-    
     player:Possess(char)
 
     -- Subscribe to Death event
@@ -247,7 +267,8 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
     --char:SetFlyingMode(false)
     --char:SetInputEnabled(true)
 
-    char:SetLocation(Vector(40619,63438,600) or Vector(0, 0, 1000)) -- THIS CHANGES SPAWN POSITION?
+    char:SetLocation(Vector(40619, 63438, 600)) -- THIS CHANGES SPAWN POSITION?
+    --char:SetLocation(Vector(0, 0, 1000))
     char:SetCapsuleSize(20, 92)
 
     --give nametag feck it
@@ -261,9 +282,10 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
     Events.CallRemote('core:playerSpawned', player, Core.Players[player:GetID()].serialisedVersion)
     Events.Call('core:playerSpawned', player)
     Events.BroadcastRemote('core:playerJoinedServer', player)
-    
+
     Events.CallRemote("multicharacter:RemoveRoom", player)
-    Events.CallRemote("pcrp-core:SpawnMenu", player, true)
+    Events.CallRemote("pcrp-core:ShowHUD", player)
+    --Events.CallRemote("pcrp-core:SpawnMenu", player, true)
 --[[                     break
                 end
             end
@@ -408,9 +430,10 @@ Events.SubscribeRemote('multicharacter:SaveCharacter', function(player, characte
         Events.Call('core:playerSpawned', player)
         Events.BroadcastRemote('core:playerJoinedServer', player)
         Events.CallRemote("multicharacter:RemoveRoom", player)
-        Events.CallRemote("pcrp-core:SpawnMenu", player, true)
+        Events.CallRemote("pcrp-core:ShowHUD", player)
+        --Events.CallRemote("pcrp-core:SpawnMenu", player, true)
 
-        char:SetLocation(Vector())
+        char:SetLocation(Vector(40619, 63438, 600))
     end, 0)
 end)
 
@@ -466,6 +489,8 @@ function UpdatePlayer(xPlayer, data, charid)
         xPlayer.set('gender', data.gender)
         xPlayer.set('nationality', data.nationality)
     end
+
+
 end
 
 --- @brief Function to create a random string for the char id

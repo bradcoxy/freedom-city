@@ -3,6 +3,7 @@ local multichar_ui = Core.RegisterHUD('multicharacter', 'file://ui/modules/multi
 local active_camera = false
 local multichar_small_room
 local multichar_platform
+local inMultiChar = false
 
 Events.SubscribeRemote('pcrp-core:MulticharacterSetup', function(characterData)
     active_camera = true
@@ -61,6 +62,7 @@ Events.SubscribeRemote('multichar:SetupRoom', function(platformPos)
     Sky.SetAnimateTimeOfDay(false)
     Sky.SetTimeOfDay(7, 30)
     Input.SetInputEnabled(false)
+    inMultiChar = true
     local my_light = Light(
         platformPos + Vector(120, 0, 80),
         Rotator(0, 90, 0), -- Relevant only for Rect and Spot light types
@@ -90,6 +92,7 @@ Events.SubscribeRemote('multicharacter:RemoveRoom', function()
     
     Sky.SetAnimateTimeOfDay(true)
     Input.SetInputEnabled(true)
+    inMultiChar = false
 end)
 
 function RemoveRoom()
