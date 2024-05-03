@@ -156,6 +156,9 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
     end
 
     function self.RemoveItem(item, count, metadata, slot, extra)
+        if not item then return end
+        if not count then return end
+
         slot = tonumber(slot)
 
         if not extra then
@@ -223,6 +226,8 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
             -- end
             self.holder.call("inventory:ItemRemoved", item, itemData.label, count)
         end
+
+        print(HELIXTable.Dump(self.itemRegistry))
     end
 
     function self.GetSlot(slot, invType)
@@ -460,11 +465,17 @@ Core.CreateCallback('inventory:ValidateMovement', function(player, cb, data)
     if (fromSlot.id == toSlot.id) then
         -- internal inventory swap. i.e swapping items around
         fromInventory.MoveSlot(fromSlot, toSlot);
-        
+
         local invTarget = xPlayer.getInventoryTarget()
         local otherInvs = GetOtherInventories(xPlayer, { type = invTarget })
 
-        return cb(true, xPlayer.inventory, otherInvs)
+        return cb(true, {
+            id = xPlayer.inventory.id,
+            pockets = xPlayer.inventory.pockets,
+            slots = xPlayer.inventory.slots,
+            label = xPlayer.inventory.label,
+            weight = xPlayer.inventory.weight
+        }, otherInvs)
     end
     
     local fromInvSlot = fromInventory.GetSlot(fromSlot.slot, fromSlot.extra)
@@ -519,8 +530,13 @@ Core.CreateCallback('inventory:ValidateMovement', function(player, cb, data)
     -- end
     
     otherInvs = GetOtherInventories(xPlayer, otherInvs)
-
-    cb(true, xPlayer.inventory, otherInvs)
+    cb(true, {
+        id = xPlayer.inventory.id,
+        pockets = xPlayer.inventory.pockets,
+        slots = xPlayer.inventory.slots,
+        label = xPlayer.inventory.label,
+        weight = xPlayer.inventory.weight
+    }, otherInvs)
 end)
 
 function GetOtherInventories(xPlayer, other)
@@ -536,9 +552,23 @@ function GetOtherInventories(xPlayer, other)
             if not xPlayer.insideVehicle then return nil end
             local vehData = Core.GetVehicleData(xPlayer.insideVehicle)
             if not Core.GetInventory(vehData.vin) then
-                otherInventories[1] = Core.CreateInventory(vehData.vin, 'glovebox', 1, 100, 'Glovebox')
+                local otherInven = Core.CreateInventory(vehData.vin, 'glovebox', 1, 100, 'Glovebox')
+                otherInventories[1] = {
+                    id = otherInven.id,
+                    pockets = otherInven.pockets,
+                    slots = otherInven.slots,
+                    label = otherInven.label,
+                    weight = otherInven.weight
+                }
             else
-                otherInventories[1] = Core.GetInventory(vehData.vin)
+                local otherInven = Core.GetInventory(vehData.vin)
+                otherInventories[1] = {
+                    id = otherInven.id,
+                    pockets = otherInven.pockets,
+                    slots = otherInven.slots,
+                    label = otherInven.label,
+                    weight = otherInven.weight
+                }
             end
         end
     else
@@ -548,7 +578,10 @@ function GetOtherInventories(xPlayer, other)
 
         for k, v in pairs(Core.InventoryDrops) do
             if v.coords:Distance(coords) <= 275 then
-                insert(otherInventories, v.inventory)
+                insert(otherInventories, {
+                    label = v.inventory.label,
+                    weight = v.inventory.weight[2]
+                })
             end
         end
 
@@ -574,7 +607,13 @@ Core.CreateCallback('inventory:GetInventory', function(player, cb, other)
     -- end
 
 
-    cb(xPlayer.inventory, otherInventories)
+    cb({
+        id = xPlayer.inventory.id,
+        pockets = xPlayer.inventory.pockets,
+        slots = xPlayer.inventory.slots,
+        label = xPlayer.inventory.label,
+        weight = xPlayer.inventory.weight
+    }, otherInventories)
 end)
 
 Core.CreateCallback('inventory:SplitItem', function(player, cb, slot, amount)
@@ -614,7 +653,7 @@ Events.SubscribeRemote('inventory:UseInventorySlot', function(player, slot, extr
     Core.UseItem(xPlayer, inventory[extra][slot].name, slot, extra)
 end)
 
-Events.SubscribeRemote('inventory:DropItem', function(player, data)
+--[[ Events.SubscribeRemote('inventory:DropItem', function(player, data)
     local itemSlot = data.item.slot
     local itemName = data.item.name
     local itemCount = data.item.count
@@ -623,6 +662,8 @@ Events.SubscribeRemote('inventory:DropItem', function(player, data)
     local xPlayer = Core.GetPlayerFromId(player:GetID())
 
     xPlayer.inventory.RemoveItem(itemName, itemCount, nil, itemSlot, itemExtra)
+
+    print(itemName, itemCount, nil, itemSlot, itemExtra)
 
     local coords = xPlayer.character:GetLocation()
     local nearestInventory = GetNearestInventory(coords)
@@ -646,10 +687,60 @@ Events.SubscribeRemote('inventory:DropItem', function(player, data)
         createdAt = time(),
         inventory = newInventory,
         coords = coords,
-        marker = Core.CreateMarker( identifier, {
+        marker = Core.CreateMarker(identifier, {
             coords = coords
         })
     }
+end) ]]
+
+Core.CreateCallback('inventory:DropItem', function(player, cb, data)
+    local itemSlot = data.item.slot
+    local itemName = data.item.name
+    local itemCount = data.item.count
+    local itemExtra = data.inventory.extra
+
+    local xPlayer = Core.GetPlayerFromId(player:GetID())
+
+    xPlayer.inventory.RemoveItem(itemName, itemCount, nil, itemSlot, itemExtra)
+
+    print(itemName, itemCount, nil, itemSlot, itemExtra)
+
+    local coords = xPlayer.character:GetLocation()
+    local nearestInventory = GetNearestInventory(coords)
+
+    if nearestInventory then
+        nearestInventory.inventory.AddItem(itemName, itemCount)
+        return
+    end
+
+    local x = floor(abs(coords.X))
+    local y = floor(abs(coords.Y))
+    
+    -- TODO: FIX ITEM AMOUNT DROP
+    local identifier = ("%sx%s"):format(x, y)
+    local newInventory = Core.CreateInventory(identifier, 'drop')
+    
+    newInventory.AddItem(itemName, itemCount)
+
+    coords = Vector(coords.X, coords.Y, coords.Z - 100)
+    Core.InventoryDrops[identifier] = {
+        createdAt = time(),
+        inventory = newInventory,
+        coords = coords,
+        marker = Core.CreateMarker(identifier, {
+            coords = coords
+        })
+    }
+
+    Timer.SetTimeout(function ()
+        cb({
+            id = xPlayer.inventory.id,
+            pockets = xPlayer.inventory.pockets,
+            slots = xPlayer.inventory.slots,
+            label = xPlayer.inventory.label,
+            weight = xPlayer.inventory.weight
+        }, GetOtherInventories(xPlayer, otherInvs))
+    end, 250)
 end)
 
 Events.SubscribeRemote('inventory:GiveItem', function(player, data)

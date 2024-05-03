@@ -22,8 +22,15 @@ InventoryHUD.Subscribe('AttemptSlotMovement', function(data)
                 end
             end
 
+            local player = Client.GetLocalPlayer()
+            local source = {
+                name = player:GetName(),
+                profile = player:GetAccountIconURL()
+            }
+
             InventoryHUD.Call('OpenInventory', {
                 inventoryData = sanitisedInventory,
+                source = source,
                 nearbyInventories = otherInventories
             })
         end
@@ -115,8 +122,30 @@ function SanitiseInventory(inv)
 end
 
 function RemoveItem(data)
-    Events.CallRemote('inventory:DropItem', data)
-    Core.OpenInventory()
+    Core.TriggerCallback('inventory:DropItem', function(valid, inv, otherInventories)
+        if valid then
+
+            local sanitisedInventory = SanitiseInventory(inv)
+    
+            if otherInventories then
+                for k, v in ipairs(otherInventories) do
+                    otherInventories[k] = SanitiseInventory(v)
+                end
+            end
+
+            local player = Client.GetLocalPlayer()
+            local source = {
+                name = player:GetName(),
+                profile = player:GetAccountIconURL()
+            }
+
+            InventoryHUD.Call('OpenInventory', {
+                inventoryData = sanitisedInventory,
+                source = source,
+                nearbyInventories = otherInventories
+            })
+        end
+    end, data)
 end
 
 function GiveItem(data)

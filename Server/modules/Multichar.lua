@@ -39,20 +39,42 @@ function SetCharMesh(char, isMale)
 end
 
 Events.Subscribe('core-multicharacter:PlayerReady', function(player, old_char)
-    local ret_01, ret_02 = NanosMath.RelativeTo(Vector(120, 0, 0), Rotator(0, 180, 0), old_char)
-    PlayersSelecting[player] = { char = old_char, cam_pos = ret_01 }
     PlayerSelectingCount = PlayerSelectingCount + 1
 
+    
+    --old_char:SetLocation(Vector(0, 0, -500 + (PlayerSelectingCount * -180)))
+    --old_char:SetLocation(Vector(0, 0, 0))
+    old_char:SetLocation(Vector(40619, 63438, 107))
+    old_char:SetRotation(Rotator(0, 0, 0))
 
-    old_char:SetLocation(Vector(0, 0, -500 + (PlayerSelectingCount * -180)))
-    old_char:SetRotation(Rotator(0, 20, 0))
+--[[     local ret_01, ret_02 = HELIXMath.RelativeTo(Vector(120, 0, 10), Rotator(0, 180, 0), old_char)
 
-    local platformPos = old_char:GetLocation()
-    player:SetCameraLocation(ret_01)
-    player:SetCameraRotation(ret_02)
+    local cameraPos = old_char:GetLocation() + old_char:GetRotation():RotateVector(Vector(120, 0, 200)) ]]
 
-    player:SetDimension(PickingCharacterDimension)
-    old_char:SetDimension(PickingCharacterDimension)
+    --
+    
+    Timer.SetTimeout(function ()
+        local cameraAttachProp = Prop(Vector(), Rotator(0, 0, 0), 'helix::SM_Pyramid_VR', 1, false, 0, CCDMode.Disabled)
+        cameraAttachProp:SetVisibility(false)
+        cameraAttachProp:SetDimension(player:GetID())
+        cameraAttachProp:AttachTo(old_char, AttachmentRule.SnapToTarget)
+        cameraAttachProp:SetRelativeLocation(Vector(120, 0, 0))
+        cameraAttachProp:SetRelativeRotation(Rotator(0, -180, 0))
+
+        --player:SetCameraSocketOffset(Vector())
+        --player:AttachCameraTo(cameraAttachProp)
+        player:SetCameraLocation(cameraAttachProp:GetLocation())
+        player:SetCameraRotation(cameraAttachProp:GetRotation())
+        player:SetCameraSocketOffset(Vector(0, 0, 50))
+        cameraAttachProp:Detach()
+        cameraAttachProp:Destroy()
+        PlayersSelecting[player] = {char = old_char, cam_prop = cameraAttachProp}
+    end, 100)
+
+--[[     
+ ]]
+    player:SetDimension(player:GetID())
+    old_char:SetDimension(player:GetID())
 
     --old_char:SetGravityEnabled(false)
 
@@ -118,7 +140,7 @@ Events.Subscribe('core-multicharacter:PlayerReady', function(player, old_char)
             xPlayer.call('multichar:SetupRoom', platformPos)
         end, 5000) ]]
     end)
-    xPlayer.call('multichar:SetupRoom', platformPos)
+    xPlayer.call('multichar:SetupRoom', old_char:GetLocation())
     
     -- print("MAX CHARACTERS => ", maxCharacters[1])
     -- maxCharacters = (maxCharacters[1] and maxCharacters[1].maxcharacters) or 1
@@ -143,7 +165,7 @@ end)
 Events.SubscribeRemote('multicharacter:AdjustCamera', function(player, offset, faceCamera)
     if not PlayersSelecting[player] then return end
 
-    player:SetCameraSocketOffset(offset + (Vector(0, 0, 1) * (PlayerSelectingCount * -180)))
+    --player:SetCameraSocketOffset(offset + (Vector(0, 0, 1) * (PlayerSelectingCount * -180)))
 
     local char = PlayersSelecting[player].char
     if faceCamera then
@@ -152,7 +174,7 @@ Events.SubscribeRemote('multicharacter:AdjustCamera', function(player, offset, f
         return
     end
 
-    char:SetRotation(Rotator(0, 0, 0))
+    --char:SetRotation(Rotator(0, 0, 0))
 end)
 
 Events.SubscribeRemote('multicharacter:UpdateCharacter', function(player, charid)
@@ -243,6 +265,7 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
     end)
 
     player:SetCameraSocketOffset(Vector())
+    player:SetCameraRotation(Rotator(0, 180, 0))
 
     player:SetDimension(1)
     char:SetDimension(1)
@@ -251,7 +274,8 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
     --char:SetFlyingMode(false)
     --char:SetInputEnabled(true)
 
-    char:SetLocation(Vector(40619, 63438, 600)) -- THIS CHANGES SPAWN POSITION?
+    char:SetLocation(Vector(40619, 63438, 107)) -- THIS CHANGES SPAWN POSITION?
+    char:SetRotation(Rotator(0, 180, 0))
     --char:SetLocation(Vector(0, 0, 1000))
     char:SetCapsuleSize(20, 92)
 
@@ -359,6 +383,10 @@ Events.SubscribeRemote('multicharacter:SaveCharacter', function(player, characte
                 xPlayer.setCharId(charid)
                 UpdatePlayer(xPlayer, characterData, charid)
 
+                xPlayer.inventory.AddItem('begel', 1)
+                xPlayer.inventory.AddItem('phone', 1)
+                xPlayer.inventory.AddItem('water', 1)
+
                 PersistentDatabase.Update(identifier, JSON.stringify(data[1]['value']), function () end)
             else
                 PersistentDatabase.Insert(identifier, JSON.stringify(userDefault), function () end)
@@ -401,6 +429,7 @@ Events.SubscribeRemote('multicharacter:SaveCharacter', function(player, characte
         end)
         
         player:SetCameraSocketOffset(Vector())
+        player:SetCameraRotation(Rotator(0, 180, 0))
         
         char:SetGravityEnabled(true)
         
@@ -412,9 +441,11 @@ Events.SubscribeRemote('multicharacter:SaveCharacter', function(player, characte
         Events.BroadcastRemote('core:playerJoinedServer', player)
         Events.CallRemote("multicharacter:RemoveRoom", player)
         Events.CallRemote("pcrp-core:ShowHUD", player)
+
         --Events.CallRemote("pcrp-core:SpawnMenu", player, true)
 
-        char:SetLocation(Vector(40619, 63438, 600))
+        char:SetLocation(Vector(40619, 63438, 107))
+        char:SetRotation(Rotator(0, 180, 0))
     end, 0)
 end)
 

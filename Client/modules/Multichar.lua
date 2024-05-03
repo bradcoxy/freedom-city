@@ -43,7 +43,7 @@ Events.SubscribeRemote('pcrp-core:MulticharacterSetup', function(characterData)
 end)
 
 Events.SubscribeRemote('multichar:SetupRoom', function(platformPos)
-    local vp = Viewport.GetViewportSize()
+--[[     local vp = Viewport.GetViewportSize()
     local x = vp.X * 0.115
     local y = vp.Y * 0.115
 
@@ -57,7 +57,7 @@ Events.SubscribeRemote('multichar:SetupRoom', function(platformPos)
     multichar_small_room:SetMaterialTextureParameter("Texture", "package://pcrp-core/Client/image.png")
     
     multichar_platform = Prop(platformPos - Vector(0, 0, 100.0), Rotator(), "helix::SM_Plane", CollisionType.Normal, false)
-    multichar_platform:SetScale(Vector(10, 10, 1))
+    multichar_platform:SetScale(Vector(10, 10, 1)) ]]
 
     Sky.SetAnimateTimeOfDay(false)
     Sky.SetTimeOfDay(7, 30)
@@ -81,14 +81,14 @@ end)
 
 Events.SubscribeRemote('multicharacter:RemoveRoom', function()
     print("TRYING TO REMOVE ROOM")
-    multichar_small_room:Destroy()
+--[[     multichar_small_room:Destroy()
     multichar_small_room = nil
     multichar_platform:Destroy()
-    multichar_platform = nil
+    multichar_platform = nil ]]
 
 	active_camera = false
 
-    multichar_ui.RemoveHUD()    
+    multichar_ui.RemoveHUD()
     
     Sky.SetAnimateTimeOfDay(true)
     Input.SetInputEnabled(true)

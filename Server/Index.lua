@@ -48,12 +48,12 @@ Events.SubscribeRemote('pcrp-core:StopAnimation', function(player, anim)
     local id = player:GetID()
     local xPlayer = Core.GetPlayerFromId(id)
     local character = xPlayer.character
-    
+
     if not anim then
         anim = xPlayer.get('currentAnim')
         xPlayer.set('currentAnim', nil)
     end
-    
+
     character:StopAnimation(anim)
 end)
 
