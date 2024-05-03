@@ -143,11 +143,23 @@ function CreatePlayerData(player, id, identifier, name, accounts, stats, xp, job
         print('job', HELIXTable.Dump(self.job))
         print(HELIXTable.Dump(Core.Players[self.player:GetID()]))
         print(HELIXTable.Dump(t.serialisedVersion)) ]]
-        local finalSave = {}
+        local toSave = {
+            ['accounts'] = true,
+            ['job'] = true,
+        }
+        local saving = {}
+        local push = false
         for k, data in pairs(t.serialisedVersion) do
-            print(k, HELIXTable.Dump(data))
+            if toSave[k] then
+                saving[k] = data
+                push = true
+            end
         end
 
+        if push then
+            print(HELIXTable.Dump(saving))
+            PersistentDatabase.Insert(('%s_Saved'):format(self.charid), JSON.stringify(saving), function () end)
+        end
         self.inventory.Save()
     end
 

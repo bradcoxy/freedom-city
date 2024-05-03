@@ -183,6 +183,10 @@ Events.SubscribeRemote("pcrp-core:HideHUD", function()
     Core.HideHUD()
 end)
 
+Events.SubscribeRemote("pcrp-core:ShowHUD", function()
+    Core.ShowHUD()
+end)
+
 Events.SubscribeRemote('core:playerSpawned', function(playerData)
     Core.PlayerData = playerData
 end)
