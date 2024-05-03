@@ -85,7 +85,8 @@ Events.SubscribeRemote('multicharacter:RemoveRoom', function()
 
 	active_camera = false
 
-    multichar_ui.RemoveHUD()    
+    multichar_ui.RemoveHUD()   
+    Core.ShowHUD() 
     
     Sky.SetAnimateTimeOfDay(true)
 end)
@@ -96,7 +97,7 @@ function RemoveRoom()
 	active_camera = false
 
     multichar_ui.RemoveHUD()
-    
+    Core.ShowHUD()
     
     Sky.SetAnimateTimeOfDay(true)
 end

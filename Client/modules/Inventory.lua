@@ -182,6 +182,7 @@ FastSlots = {
     ['Five'] = 5,
 }
 
+--[[
 Input.Subscribe("KeyPress", function(key_name)
     if key_name == 'Escape' then
         if Core.InventoryOpened then
@@ -196,3 +197,4 @@ Input.Subscribe("KeyPress", function(key_name)
 
     UseItem({slot=fastSlot, extra='pockets'})
 end)
+]]

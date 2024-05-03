@@ -81,22 +81,24 @@ Events.Subscribe('core-multicharacter:PlayerReady', function(player, old_char)
 
     local characterIds = {} --DB:Select("SELECT charid FROM users WHERE identifier = :0", xPlayer.identifier)
     PersistentDatabase.GetByKey(xPlayer.identifier, function(success, data)
-        data = JSON.parse(data)
-
         --print(HELIXTable.Dump(data))
-        if success and data[1] then
-            print('hello')
+        local maxCharacters = 0
+        local characters = {}
+        if success then
+            data = JSON.parse(data)
+            if data[1] then
+                maxCharacters = data[1]['value']['maxCharacters']
+                characters = data[1]['value']['characters']
 
-            print(HELIXTable.Dump(data[1]['value']))
-            
-            xPlayer.call('pcrp-core:MulticharacterSetup', {
-                slotsAvailable = data[1]['value']['maxCharacters'] or 0,
-                characters = data[1]['value']['characters'] or {}
-            })
-
-            for charid, character in pairs(data[1]['value']['characters']) do
-                PlayerCharactersSaved[character.charid] = character
+                for charid, character in pairs(characters) do
+                    PlayerCharactersSaved[character.charid] = character
+                end
             end
+
+            xPlayer.call('pcrp-core:MulticharacterSetup', {
+                slotsAvailable = maxCharacters,
+                characters = characters
+            })
             --print(characterIds, maxCharacters)
         end
 
@@ -245,7 +247,7 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
     --char:SetFlyingMode(false)
     --char:SetInputEnabled(true)
 
-    char:SetLocation(Vector(40619,63438,1000) or Vector(0, 0, 1000)) -- THIS CHANGES SPAWN POSITION?
+    char:SetLocation(Vector(40619,63438,800) or Vector(0, 0, 1000)) -- THIS CHANGES SPAWN POSITION?
     char:SetCapsuleSize(20, 92)
 
     --give nametag feck it
@@ -408,7 +410,7 @@ Events.SubscribeRemote('multicharacter:SaveCharacter', function(player, characte
         Events.CallRemote("multicharacter:RemoveRoom", player)
         Events.CallRemote("pcrp-core:SpawnMenu", player, true)
 
-        char:SetLocation(Vector())
+        char:SetLocation(Vector(40619,63438,800))
     end, 0)
 end)
 
