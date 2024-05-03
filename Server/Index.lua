@@ -36,6 +36,14 @@ Events.SubscribeRemote('pcrp-core:PlayAnimation', function(player, anim, slot_fl
     xPlayer.set('currentAnim', anim)
 end)
 
+
+Chat.Subscribe("PlayerSubmit", function(message, player)
+	if (message == 'coords') then
+		local character = player:GetControlledCharacter()
+		print(character:GetLocation(), character:GetRotation())
+	end
+end)
+
 Events.SubscribeRemote('pcrp-core:StopAnimation', function(player, anim)
     local id = player:GetID()
     local xPlayer = Core.GetPlayerFromId(id)
@@ -254,8 +262,7 @@ Package.Subscribe("Load", function()
     for _, character in pairs(Character.GetPairs()) do
         local player = character:GetPlayer()
         
-		if player then 
-            
+		if player then
 			character:Destroy()
             OnPlayerSpawn(player)
             OnPlayerReady(player)
