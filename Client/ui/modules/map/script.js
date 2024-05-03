@@ -491,7 +491,7 @@ const hardcodedBlips = [
 ];
 setBlips(hardcodedBlips);
 setMapScale(1);
-playerMarker.data("coords", JSON.stringify({ x: 2181, y: 556 }));
+playerMarker.data("coords", JSON.stringify({ x: 0, y: 0 }));
 
 
 
