@@ -27,7 +27,6 @@ function Core.UpdateFuel(player)
     else
         if fuel_interval then
             Timer.ClearInterval(fuel_interval)
-            print("Corto interavalo")
         end
     end
 end

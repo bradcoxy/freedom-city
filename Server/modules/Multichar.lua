@@ -40,15 +40,14 @@ end
 
 Events.Subscribe('core-multicharacter:PlayerReady', function(player, old_char)
     local ret_01, ret_02 = NanosMath.RelativeTo(Vector(120, 0, 0), Rotator(0, 180, 0), old_char)
-
     PlayersSelecting[player] = { char = old_char, cam_pos = ret_01 }
     PlayerSelectingCount = PlayerSelectingCount + 1
 
 
     old_char:SetLocation(Vector(0, 0, -500 + (PlayerSelectingCount * -180)))
     old_char:SetRotation(Rotator(0, 20, 0))
-    local platformPos = old_char:GetLocation()
 
+    local platformPos = old_char:GetLocation()
     player:SetCameraLocation(ret_01)
     player:SetCameraRotation(ret_02)
 
@@ -56,8 +55,6 @@ Events.Subscribe('core-multicharacter:PlayerReady', function(player, old_char)
     old_char:SetDimension(PickingCharacterDimension)
 
     --old_char:SetGravityEnabled(false)
-
-    local char = old_char
 
 --[[     char:RemoveAllSkeletalMeshesAttached()
 
@@ -150,7 +147,7 @@ Events.SubscribeRemote('multicharacter:AdjustCamera', function(player, offset, f
 
     local char = PlayersSelecting[player].char
     if faceCamera then
-        char:SetRotation(Rotator(0, 20, 0))
+        --char:SetRotation(Rotator(0, 20, 0))
 
         return
     end
@@ -206,8 +203,6 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
         return -- Character not available
     end
 
-    print(HELIXTable.Dump(characterSaved))
-
     PlayersSelecting[player] = nil
     PlayerSelectingCount = PlayerSelectingCount - 1
 
@@ -260,9 +255,6 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
     --char:SetLocation(Vector(0, 0, 1000))
     char:SetCapsuleSize(20, 92)
 
-    --give nametag feck it
-    print(HELIXTable.Dump(xPlayer))
-    print(xPlayer.firstname)
 --[[         local nametag = TextRender(Vector(0,0,100),Rotator(),xPlayer.firstname or player:GetAccountName(),Vector(0.2,0.2,0.2),Color(1,1,1),FontType.Roboto,TextRenderAlignCamera.AlignCameraRotation) 
     nametag:AttachTo(char)
     nametag:SetRelativeLocation(Vector(0,0,100))
