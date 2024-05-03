@@ -98,9 +98,7 @@ Events.Subscribe('core-multicharacter:PlayerReady', function(player, old_char)
         DB:Execute("INSERT INTO users_maxcharacters (identifier, maxcharacters) VALUES (:0, :0)", xPlayer.identifier, 1)
     end ]]
 
-    local characterIds = {} --DB:Select("SELECT charid FROM users WHERE identifier = :0", xPlayer.identifier)
     PersistentDatabase.GetByKey(xPlayer.identifier, function(success, data)
-        --print(HELIXTable.Dump(data))
         local maxCharacters = 0
         local characters = {}
         if success then
@@ -118,29 +116,9 @@ Events.Subscribe('core-multicharacter:PlayerReady', function(player, old_char)
                 slotsAvailable = maxCharacters,
                 characters = characters
             })
-            --print(characterIds, maxCharacters)
         end
-
---[[         for charid in pairs(characterIds) do
-            PersistentDatabase.GetByKey(charid, function (success, data)
-                data = JSON.parse(data)
-                --print(charid, HELIXTable.Dump(data))
-                if success and data[1] then
-                    characterInfo[#characterInfo + 1] = data[1]['value'].charid and data[1]['value']
-                end
-            end)
-        end ]]
-
---[[         print('now ', HELIXTable.Dump(characterInfo))
-        Timer.SetTimeout(function ()
-            xPlayer.call('pcrp-core:MulticharacterSetup', {
-                slotsAvailable = maxCharacters,
-                characters = characterInfo
-            })
-            xPlayer.call('multichar:SetupRoom', platformPos)
-        end, 5000) ]]
     end)
-    xPlayer.call('multichar:SetupRoom', old_char:GetLocation())
+    xPlayer.call('multichar:SetupRoom', Vector(40619, 63438, 107))
     
     -- print("MAX CHARACTERS => ", maxCharacters[1])
     -- maxCharacters = (maxCharacters[1] and maxCharacters[1].maxcharacters) or 1
