@@ -1,3 +1,4 @@
+--[[
 local SpawnUI = Core.RegisterHUD('spawn', 'file://ui/modules/spawnmenu/build/index.html')
 
 local SpawnTypes = {
@@ -83,3 +84,4 @@ SpawnUI.Subscribe("SelectSpawn", function()
 
     Events.CallRemote("SendToApartment")
 end)
+]]
