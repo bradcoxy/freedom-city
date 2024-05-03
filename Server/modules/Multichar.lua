@@ -227,11 +227,9 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
             saved = JSON.parse(saved)
 
             if saved[1] then
-                local xPlayer = Core.GetPlayerFromId(id)
                 local charSaved = saved[1]['value']
                 for k, save in pairs(charSaved) do
                     if xPlayer[k] then
-                        xPlayer[k] = save
                         if (k == 'accounts') then
                             xPlayer.addMoney(save['money'])
                         elseif (k == 'job') then
@@ -267,8 +265,8 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
     --char:SetFlyingMode(false)
     --char:SetInputEnabled(true)
 
-    char:SetLocation(Vector(40619, 63438, 600)) -- THIS CHANGES SPAWN POSITION?
-    --char:SetLocation(Vector(0, 0, 1000))
+    --char:SetLocation(Vector(40619, 63438, 600)) -- THIS CHANGES SPAWN POSITION?
+    char:SetLocation(Vector(0, 0, 1000))
     char:SetCapsuleSize(20, 92)
 
     --give nametag feck it
