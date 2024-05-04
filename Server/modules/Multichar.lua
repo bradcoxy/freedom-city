@@ -39,20 +39,13 @@ function SetCharMesh(char, isMale)
 end
 
 Events.Subscribe('core-multicharacter:PlayerReady', function(player, old_char)
+    local xPlayer = Core.GetPlayerFromId(player:GetID())
     PlayerSelectingCount = PlayerSelectingCount + 1
 
-    
-    --old_char:SetLocation(Vector(0, 0, -500 + (PlayerSelectingCount * -180)))
-    --old_char:SetLocation(Vector(0, 0, 0))
-    old_char:SetLocation(Vector(40619, 63438, 107))
-    old_char:SetRotation(Rotator(0, 0, 0))
 
---[[     local ret_01, ret_02 = HELIXMath.RelativeTo(Vector(120, 0, 10), Rotator(0, 180, 0), old_char)
-
-    local cameraPos = old_char:GetLocation() + old_char:GetRotation():RotateVector(Vector(120, 0, 200)) ]]
-
-    --
-    
+    xPlayer.call('multichar:SetupRoom', Vector(0, 0, -5000))
+    player:SetDimension(player:GetID())
+    old_char:SetDimension(player:GetID())
     Timer.SetTimeout(function ()
         local cameraAttachProp = Prop(Vector(), Rotator(0, 0, 0), 'helix::SM_Pyramid_VR', 1, false, 0, CCDMode.Disabled)
         cameraAttachProp:SetVisibility(false)
@@ -61,42 +54,15 @@ Events.Subscribe('core-multicharacter:PlayerReady', function(player, old_char)
         cameraAttachProp:SetRelativeLocation(Vector(120, 0, 0))
         cameraAttachProp:SetRelativeRotation(Rotator(0, -180, 0))
 
-        --player:SetCameraSocketOffset(Vector())
-        --player:AttachCameraTo(cameraAttachProp)
+        old_char:SetLocation(Vector(0, 0, -5000))
+        old_char:SetRotation(Rotator(0, 0, 0))
         player:SetCameraLocation(cameraAttachProp:GetLocation())
         player:SetCameraRotation(cameraAttachProp:GetRotation())
         player:SetCameraSocketOffset(Vector(0, 0, 50))
         cameraAttachProp:Detach()
         cameraAttachProp:Destroy()
-        PlayersSelecting[player] = {char = old_char, cam_prop = cameraAttachProp}
+        PlayersSelecting[player] = {char = old_char}
     end, 100)
-
---[[     
- ]]
-    player:SetDimension(player:GetID())
-    old_char:SetDimension(player:GetID())
-
-    --old_char:SetGravityEnabled(false)
-
---[[     char:RemoveAllSkeletalMeshesAttached()
-
-    local mesh = "helix::SK_Male"
-    local head = "helix::SK_Male_Head"
-
-    char:SetMesh(mesh)
-    char:AddSkeletalMeshAttached("head", head) ]]
-
-    -- SetCharMesh(char, true)
-
-    local xPlayer = Core.GetPlayerFromId(player:GetID())
-
---[[     local characterIds = DB:Select("SELECT charid FROM users WHERE identifier = :0", xPlayer.identifier)
-    local maxCharacters = DB:Select("SELECT maxcharacters FROM users_maxcharacters WHERE identifier = :0",
-        xPlayer.identifier)
-
-    if maxCharacters[1] == nil then
-        DB:Execute("INSERT INTO users_maxcharacters (identifier, maxcharacters) VALUES (:0, :0)", xPlayer.identifier, 1)
-    end ]]
 
     PersistentDatabase.GetByKey(xPlayer.identifier, function(success, data)
         local maxCharacters = 0
@@ -118,41 +84,21 @@ Events.Subscribe('core-multicharacter:PlayerReady', function(player, old_char)
             })
         end
     end)
-    xPlayer.call('multichar:SetupRoom', Vector(40619, 63438, 107))
-    
-    -- print("MAX CHARACTERS => ", maxCharacters[1])
-    -- maxCharacters = (maxCharacters[1] and maxCharacters[1].maxcharacters) or 1
-    -- print("MAX CHARACTERS => ", maxCharacters)
-    
---[[     local str = ''
-    local lenCharacterIds = #characterIds
-    for k, v in ipairs(characterIds) do
-        if k ~= lenCharacterIds then
-            str = str .. 'charid=\'' .. v.charid .. '\'' .. ' or '
-        else
-            str = str .. 'charid=\'' .. v.charid .. '\''
-        end
-    end
-    
-    local characterInfo
-    if #str ~= 0 then
-        characterInfo = DB:Select("SELECT * FROM user_character_info WHERE " .. str)
-    end ]]
 end)
 
 Events.SubscribeRemote('multicharacter:AdjustCamera', function(player, offset, faceCamera)
     if not PlayersSelecting[player] then return end
 
-    --player:SetCameraSocketOffset(offset + (Vector(0, 0, 1) * (PlayerSelectingCount * -180)))
+--[[     player:SetCameraSocketOffset(offset + (Vector(0, 0, 1) * (PlayerSelectingCount * -180)))
 
     local char = PlayersSelecting[player].char
     if faceCamera then
-        --char:SetRotation(Rotator(0, 20, 0))
+        char:SetRotation(Rotator(0, 20, 0))
 
         return
     end
 
-    --char:SetRotation(Rotator(0, 0, 0))
+    char:SetRotation(Rotator(0, 0, 0)) ]]
 end)
 
 Events.SubscribeRemote('multicharacter:UpdateCharacter', function(player, charid)

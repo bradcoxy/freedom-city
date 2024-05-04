@@ -3,6 +3,7 @@ local multichar_ui = Core.RegisterHUD('multicharacter', 'file://ui/modules/multi
 local active_camera = false
 local multichar_small_room
 local multichar_platform
+local my_light
 local inMultiChar = false
 
 Events.SubscribeRemote('pcrp-core:MulticharacterSetup', function(characterData)
@@ -43,7 +44,7 @@ Events.SubscribeRemote('pcrp-core:MulticharacterSetup', function(characterData)
 end)
 
 Events.SubscribeRemote('multichar:SetupRoom', function(platformPos)
---[[     local vp = Viewport.GetViewportSize()
+    local vp = Viewport.GetViewportSize()
     local x = vp.X * 0.115
     local y = vp.Y * 0.115
 
@@ -57,15 +58,15 @@ Events.SubscribeRemote('multichar:SetupRoom', function(platformPos)
     multichar_small_room:SetMaterialTextureParameter("Texture", "package://pcrp-core/Client/image.png")
     
     multichar_platform = Prop(platformPos - Vector(0, 0, 100.0), Rotator(), "helix::SM_Plane", CollisionType.Normal, false)
-    multichar_platform:SetScale(Vector(10, 10, 1)) ]]
+    multichar_platform:SetScale(Vector(10, 10, 1))
 
     Sky.SetAnimateTimeOfDay(false)
     Sky.SetTimeOfDay(7, 30)
     Input.SetInputEnabled(false)
     inMultiChar = true
-    local my_light = Light(
+    my_light = Light(
         platformPos + Vector(120, 0, 80),
-        Rotator(0, 90, 0), -- Relevant only for Rect and Spot light types
+        Rotator(0, -180, 0), -- Relevant only for Rect and Spot light types
         Color(1, 1, 1), -- Red Tint
         LightType.Point, -- Point Light type
         0.2, -- Intensity
@@ -81,10 +82,12 @@ end)
 
 Events.SubscribeRemote('multicharacter:RemoveRoom', function()
     print("TRYING TO REMOVE ROOM")
---[[     multichar_small_room:Destroy()
+    multichar_small_room:Destroy()
     multichar_small_room = nil
     multichar_platform:Destroy()
-    multichar_platform = nil ]]
+    multichar_platform = nil
+    my_light:Destroy()
+    my_light = nil
 
 	active_camera = false
 
