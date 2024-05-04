@@ -90,9 +90,7 @@ Character.Subscribe("LeaveVehicle", function(self, vehicle)
         return
     end
 
-    Chat.AddMessage("Left Vehicle")
     Core.RemoveInteraction("LeftControl")
-    
     Core.ToggleSpeedometer(false)
 end)
 
@@ -252,12 +250,12 @@ current_prog_canceled = false
 current_prog_disabled = nil
 
 if CoreCFG.Debug then
-    local DEBUG_COORDS = Canvas(
+--[[     local DEBUG_COORDS = Canvas(
         true,
         Color.TRANSPARENT,
         0,
         true
-      )
+      ) ]]
       
     -- Subscribes for Update, we can only Draw inside this event
 --[[     DEBUG_COORDS:Subscribe("Update", function(self, width, height)
