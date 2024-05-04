@@ -579,6 +579,8 @@ function GetOtherInventories(xPlayer, other)
         for k, v in pairs(Core.InventoryDrops) do
             if v.coords:Distance(coords) <= 275 then
                 insert(otherInventories, {
+                    id = v.inventory.id,
+                    slots = v.inventory.slots,
                     label = v.inventory.label,
                     weight = v.inventory.weight[2]
                 })
@@ -703,13 +705,19 @@ Core.CreateCallback('inventory:DropItem', function(player, cb, data)
 
     xPlayer.inventory.RemoveItem(itemName, itemCount, nil, itemSlot, itemExtra)
 
-    print(itemName, itemCount, nil, itemSlot, itemExtra)
-
     local coords = xPlayer.character:GetLocation()
     local nearestInventory = GetNearestInventory(coords)
 
     if nearestInventory then
         nearestInventory.inventory.AddItem(itemName, itemCount)
+
+        cb({
+            id = xPlayer.inventory.id,
+            pockets = xPlayer.inventory.pockets,
+            slots = xPlayer.inventory.slots,
+            label = xPlayer.inventory.label,
+            weight = xPlayer.inventory.weight
+        }, GetOtherInventories(xPlayer, otherInvs))
         return
     end
 
@@ -719,7 +727,6 @@ Core.CreateCallback('inventory:DropItem', function(player, cb, data)
     -- TODO: FIX ITEM AMOUNT DROP
     local identifier = ("%sx%s"):format(x, y)
     local newInventory = Core.CreateInventory(identifier, 'drop')
-    
     newInventory.AddItem(itemName, itemCount)
 
     coords = Vector(coords.X, coords.Y, coords.Z - 100)
@@ -732,15 +739,13 @@ Core.CreateCallback('inventory:DropItem', function(player, cb, data)
         })
     }
 
-    Timer.SetTimeout(function ()
-        cb({
-            id = xPlayer.inventory.id,
-            pockets = xPlayer.inventory.pockets,
-            slots = xPlayer.inventory.slots,
-            label = xPlayer.inventory.label,
-            weight = xPlayer.inventory.weight
-        }, GetOtherInventories(xPlayer, otherInvs))
-    end, 250)
+    cb({
+        id = xPlayer.inventory.id,
+        pockets = xPlayer.inventory.pockets,
+        slots = xPlayer.inventory.slots,
+        label = xPlayer.inventory.label,
+        weight = xPlayer.inventory.weight
+    }, GetOtherInventories(xPlayer, otherInvs))
 end)
 
 Events.SubscribeRemote('inventory:GiveItem', function(player, data)

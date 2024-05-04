@@ -111,6 +111,7 @@ end
 
 
 function SanitiseInventory(inv)
+    print(HELIXTable.Dump(inv))
     local sanitisedInventory = {
         id = inv.id .. '',
         pockets = inv.pockets,
@@ -125,25 +126,25 @@ function RemoveItem(data)
     Core.TriggerCallback('inventory:DropItem', function(valid, inv, otherInventories)
         if valid then
 
-            local sanitisedInventory = SanitiseInventory(inv)
+--[[             local sanitisedInventory = SanitiseInventory(inv)
     
             if otherInventories then
                 for k, v in ipairs(otherInventories) do
                     otherInventories[k] = SanitiseInventory(v)
                 end
-            end
-
-            local player = Client.GetLocalPlayer()
+            end ]]
+            Core.CloseInventory()
+--[[             local player = Client.GetLocalPlayer()
             local source = {
                 name = player:GetName(),
                 profile = player:GetAccountIconURL()
             }
 
             InventoryHUD.Call('OpenInventory', {
-                inventoryData = sanitisedInventory,
+                inventoryData = inv,
                 source = source,
                 nearbyInventories = otherInventories
-            })
+            }) ]]
         end
     end, data)
 end

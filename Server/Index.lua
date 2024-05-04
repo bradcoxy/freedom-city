@@ -129,7 +129,7 @@ function OnPlayerReady(player)
 	-- Unsubscribe to Death event if unpossessed (in case we got possessed into another Character)
 	new_char:Subscribe("UnPossess", function(self)
 		self:Unsubscribe("Death", OnPlayerCharacterDeath)
-	end)	
+	end)
 
 	Events.CallRemote('core:playerSpawned', player, Core.Players[player:GetID()].serialisedVersion)
 	Events.Call('core:playerSpawned', player)
