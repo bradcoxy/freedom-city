@@ -143,7 +143,6 @@ function CreatePlayerData(player, id, identifier, name, accounts, stats, xp, job
         local save = false
         local saving = {}
         for k, data in pairs(t.serialisedVersion) do
-            print(k, HELIXTable.Dump(data))
             if toSave[k] then
                 saving[k] = data
                 save = true
