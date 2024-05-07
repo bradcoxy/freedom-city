@@ -4,6 +4,7 @@ PlayersSelecting = {}
 PlayerCharactersSaved = {}
 PlayerSelectingCount = 0
 PickingCharacterDimension = 6969
+local registeredCharIds = {}
 
 
 function SetCharMesh(char, isMale)
@@ -316,7 +317,8 @@ Events.SubscribeRemote('multicharacter:SaveCharacter', function(player, characte
                 PersistentDatabase.Insert(identifier, JSON.stringify(userDefault), function () end)
             end
         end)
-        PersistentDatabase.Insert(charid, JSON.stringify({exists = true}), function () end)
+        registeredCharIds[charid] = true
+        PersistentDatabase.Insert('registeredCharIds', JSON.stringify(registeredCharIds), function () end)
     end, 250)
 
     local isMale = character_data.gender
@@ -432,46 +434,36 @@ end
 --- @brief Function to create a random string for the char id
 function CreateCharID()
     local charId = nil
-    local checkDB = function()
+    local checkDB = function(checkDB)
         charId = tostring(Core.GetRandomStr(3) .. Core.GetRandomInt(5)):upper()
-        PersistentDatabase.GetByKey(charId, function(success, data)
+--[[         PersistentDatabase.GetByKey('registeredCharIds', function(success, data)
             data = JSON.parse(data)
 
-            if success and data[1] then
-                local charIdSaved = data[1]['value']
-                if charIdSaved then
+            if success then
+                local charIdsSaved = data[1]['value'] ]]
+
+                if not registeredCharIds[charId] then
+                    print('[helix] Char ID: ' .. charId .. ' has been created!')
+                else
                     checkDB()
                 end
-            else
-                print('[helix] Char ID: ' .. charId .. ' has been created!')
-            end
-        end)
+--[[             end
+        end) ]]
     end
     checkDB()
 
---[[     while not UniqueFound do
-        charId = tostring(Core.GetRandomStr(3) .. Core.GetRandomInt(5)):upper()
-        PersistentDatabase.GetByKey('CharcterIDs', function (success, data)
-            if success and data then
-                data = JSON.parse(data)
-                local charIds = data[1]['value']
-                if not charIds[charId] then
-                    UniqueFound = true
-                    print('[helix] Char ID: ' .. charId .. ' has been created!')
-                end
-            else
-                UniqueFound = true
-                print('[helix] Char ID: ' .. charId .. ' has been created!')
-            end
-        end)
-        -- local result = DB:Select('SELECT COUNT(*) as count FROM users WHERE charid = "' .. charId .. '"')
-        -- if result[1].count == 0 then
-        --     UniqueFound = true
-        --     print('[helix] Char ID: ' .. charId .. ' has been created!')
-        -- end
-    end ]]
     return charId
 end
+
+Package.Subscribe('Load', function ()
+    PersistentDatabase.GetByKey('registeredCharIds', function(success, data)
+        data = JSON.parse(data)
+
+        if success and data[1]then
+            registeredCharIds = data[1]['value'] or {}
+        end
+    end)
+end)
 
 --- [[Commands]] ---
 

@@ -321,7 +321,7 @@ function CreatePlayerData(player, id, identifier, name, accounts, stats, xp, job
 
         self.call('core:UpdateAccountMoney', 'money', self.accounts['money'])
         
-        if skipItem then
+        if not skipItem then
             return
         end
 
