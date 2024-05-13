@@ -199,7 +199,7 @@ Events.SubscribeRemote('multicharacter:SelectCharacter', function(player, cid)
     --char:SetFlyingMode(false)
     --char:SetInputEnabled(true)
 
-    char:SetLocation(Vector(40619, 63438, 107)) -- THIS CHANGES SPAWN POSITION?
+    char:SetLocation(Vector(35606,65780,120)) -- THIS CHANGES SPAWN POSITION?
     char:SetRotation(Rotator(0, 180, 0))
     --char:SetLocation(Vector(0, 0, 1000))
     char:SetCapsuleSize(20, 92)
@@ -370,7 +370,7 @@ Events.SubscribeRemote('multicharacter:SaveCharacter', function(player, characte
 
         --Events.CallRemote("pcrp-core:SpawnMenu", player, true)
 
-        char:SetLocation(Vector(40619, 63438, 107))
+        char:SetLocation(Vector(35606,65780,120))
         char:SetRotation(Rotator(0, 180, 0))
     end, 0)
 end)
