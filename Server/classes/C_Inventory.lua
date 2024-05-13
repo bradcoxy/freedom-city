@@ -150,7 +150,7 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
             -- if item == 'money' then
             --     self.holder.addMoney(count, true)
             -- end
-            self.holder.call("inventory:ItemAdded", item, itemData.label, count)
+            --self.holder.call("inventory:ItemAdded", item, itemData.label, count)
         end
 
     end
@@ -224,7 +224,7 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
             -- if item == 'money' then
             --     self.holder.removeMoney(count, true)
             -- end
-            self.holder.call("inventory:ItemRemoved", item, itemData.label, count)
+            --self.holder.call("inventory:ItemRemoved", item, itemData.label, count)
         end
 
         print(HELIXTable.Dump(self.itemRegistry))
