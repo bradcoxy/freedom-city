@@ -110,7 +110,7 @@ function InventoryInitialise(name, _type, level, weight, label, coords)
 
             if self.holder then
                 print('calling item added')
-                self.holder.call("inventory:ItemAdded", item, slot, metadata, count)
+                --self.holder.call("inventory:ItemAdded", item, slot, metadata, count)
             end
 
             if item == 'money' and self.holder then
