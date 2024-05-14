@@ -169,42 +169,7 @@ const showNotification = ({ type, text, title, duration }) => {
 
 // Blips
 const hardcodedBlips = [
-    {
-        id: 1,
-        name: "food",
-        coords: { x: 184204, y: -423441 },
-        imgUrl: "./assets/map-icons/food-icon.svg"
-    },
-    {
-        id: 4,
-        name: "car shop",
-        coords: { x: 150247, y: -391642 },
-        imgUrl: "./assets/map-icons/cars-icon.svg"
-    },
-    {
-        id: 8,
-        name: "hotel",
-        coords: { x: 154326, y: -394080 },
-        imgUrl: "./assets/map-icons/hotel-icon.svg"
-    },
-    {
-        id: 11,
-        name: "police",
-        coords: { x: 144335, y: -366526 },
-        imgUrl: "./assets/map-icons/police-icon.svg"
-    },
-    {
-        id: 12,
-        name: "park",
-        coords: { x: 165598, y: -378457 },
-        imgUrl: "./assets/map-icons/park-icon.svg"
-    },
-    {
-        id: 13,
-        name: "bank",
-        coords: { x: 174845, y: -410734 },
-        imgUrl: "./assets/map-icons/bank-icon.svg"
-    },
+   
 ];
 const setBlips = (blips) => {
     persistentBlips = blips;
@@ -245,6 +210,17 @@ goToCoords(barycentricInterpolation({ x: 155097, y: -398419 }));
 
 Events.Subscribe("helix-hud:UpdateCompass", direction => {
     compass.text(direction)
+})
+
+Events.Subscribe('helix-hud:AddBlip', (blip) => {
+    hardcodedBlips.push(blip)
+    setBlips(hardcodedBlips);
+})
+
+
+Events.Subscribe('helix-hud:RemoveBlip', (blip) => {
+    hardcodedBlips.shift(n)
+    setBlips(hardcodedBlips);
 })
 
 Events.Subscribe("helix-hud:ToggleHUD", toggle => {
