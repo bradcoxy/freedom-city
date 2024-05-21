@@ -370,7 +370,7 @@ Events.SubscribeRemote('multicharacter:SaveCharacter', function(player, characte
 
         --Events.CallRemote("pcrp-core:SpawnMenu", player, true)
 
-        char:SetLocation(Vector(35606,65780,120))
+        char:SetLocation(Vector(8444.7, 62169.1, 120) or Vector(35606,65780,120))
         char:SetRotation(Rotator(0, 180, 0))
     end, 0)
 end)

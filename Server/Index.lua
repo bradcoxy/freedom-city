@@ -110,10 +110,14 @@ function OnPlayerSpawn(player)
 end
 
 function OnPlayerReady(player)
-	--local new_char = HELIXCharacter(Vector(0, 0, 500), Rotator(0, 0, 0), player)
-	local new_char = Character(Vector(0, 0, 500), Rotator(0, 0, 0), "helix::SK_Male")
+	local new_char = HCharacter(Vector(0, 0, 500), Rotator(0, 0, 0), player)
+	--local new_char = Character(Vector(0, 0, 500), Rotator(0, 0, 0), "helix::SK_Male")
 
-	new_char:AddSkeletalMeshAttached("head", "helix::SK_Male_Head")
+	--new_char:AddSkeletalMeshAttached("top",'helix::SK_Hoodie_Logo_Man')
+	--new_char:AddSkeletalMeshAttached("lower",'helix::SK_Man_Pants_09')
+	--new_char:AddSkeletalMeshAttached("shoes",'helix::SK_Man_Boots_02')
+
+	--new_char:AddSkeletalMeshAttached("head", "helix::SK_Male_Head")
 	new_char:SetCapsuleSize(20, 90)
 
 	if CoreCFG.MulticharEnabled then
