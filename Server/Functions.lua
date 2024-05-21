@@ -266,6 +266,21 @@ function Core.CreateItem(name, info)
 	end
 end
 
+function Core.SpawnNPC(player, npc)
+	if not player then return end
+	if not npc.coords then return end
+
+	local ped = Character(npc.coords, npc.rotation, 'helix::SK_Male_Chest')
+
+	ped:SetMesh(npc.outfit.mesh)
+	ped:AddSkeletalMeshAttached('headwear', npc.outfit.headwear)
+	ped:AddSkeletalMeshAttached('hands', npc.outfit.hands)
+	ped:AddSkeletalMeshAttached('bottomwear', npc.outfit.bottomwear)
+	ped:AddSkeletalMeshAttached('footwear', npc.outfit.footwear)
+	ped:SetInvulnerable(true)
+end
+Events.SubscribeRemote('core:spawnNPC', Core.SpawnNPC)
+
 function Core.CreateCallback(name, cb)
     Core.ServerCallbacks[name] = cb
 end

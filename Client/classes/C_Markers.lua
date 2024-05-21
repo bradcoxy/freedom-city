@@ -6,6 +6,16 @@ Markers = {
     Cylinder = 'pco-markers::SM_MarkerCylinder'
 }
 
+NPCOutfits = {
+    ['default'] = {
+        mesh = 'helix::SK_Man_Outwear_03',
+        headwear = 'helix::SK_Male_Head',
+        hands = 'helix::SK_Male_Hands',
+        bottomwear = 'helix::SK_Man_Pants_09',
+        footwear = 'helix::SK_Male_Feet'
+    }
+}
+
 Package.Export('Markers', Markers)
 
 local time = os.time
@@ -30,9 +40,11 @@ function CreatePoint(data)
     self.markerSettings = data.marker
     self.text = data.text
     self.prompt = data.prompt
+    self.npc = data.npc
     
     self.marker = nil
-    
+    self.npcSpawned = false
+
     self.currentDistance = 0.0
     self.markerVisible = true
     self.textVisible = true
@@ -61,6 +73,25 @@ function CreatePoint(data)
         
         self.promptVisible = true
         Core.AddInteraction(self.prompt.key, self.prompt.text, self.prompt.holdTime ~= nil, self.prompt.holdTime)
+    end
+
+    function self:spawnNPC()
+        if self.npcSpawned then return end
+
+        self.npcSpawned = not self.npcSpawned
+
+        if not self.npc then
+            self.npc = {}
+        end
+
+        if not self.npc.coords then
+            self.npc.coords = self.coords
+            self.npc.rotation = Rotator()
+        end
+
+        self.npc.outfit = self.npc.outfit and NPCOutfits[self.npc.outfit] or NPCOutfits['default']
+
+        Events.CallRemote('core:spawnNPC', self.npc)
     end
 
     function self:hidePrompt()
