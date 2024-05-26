@@ -65,7 +65,7 @@ Events.Subscribe("Core:VehicleCreated", function(_, vehiclesSpawned)
 end)
 
 
-Character.Subscribe("EnterVehicle", function(self, vehicle, seat_index)
+HCharacter.Subscribe("EnterVehicle", function(self, vehicle, seat_index)
     local charPly = self:GetPlayer()
 
     if charPly == nil then return end
@@ -81,7 +81,7 @@ Character.Subscribe("EnterVehicle", function(self, vehicle, seat_index)
     Core.ToggleSpeedometer(true)
 end)
 
-Character.Subscribe("LeaveVehicle", function(self, vehicle)
+HCharacter.Subscribe("LeaveVehicle", function(self, vehicle)
     local charPly = self:GetPlayer()
 
     if charPly == nil then return end
@@ -94,7 +94,7 @@ Character.Subscribe("LeaveVehicle", function(self, vehicle)
     Core.ToggleSpeedometer(false)
 end)
 
-Character.Subscribe("HealthChange", function(self, old_health, new_health)
+HCharacter.Subscribe("HealthChange", function(self, old_health, new_health)
     local charPly = self:GetPlayer()
 
     if charPly == nil then return end
@@ -116,7 +116,7 @@ Character.Subscribe("HealthChange", function(self, old_health, new_health)
 end)
 
 
-Character.Subscribe("HealthChange", function(self, old_health, new_health)
+HCharacter.Subscribe("HealthChange", function(self, old_health, new_health)
     InventoryHUD.Call('StatusUpdate', { status = { name = 'health', value = new_health, colour = '#FF5555' } })
 end)
 

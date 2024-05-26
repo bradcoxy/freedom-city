@@ -1,11 +1,11 @@
 local fuel_interval
 
-Character.Subscribe("EnterVehicle", function(self, vehicle, seat_index)
+HCharacter.Subscribe("EnterVehicle", function(self, vehicle, seat_index)
     local player = self:GetPlayer()
     Core.UpdateFuel(player)
 end)
 
-Character.Subscribe("LeaveVehicle", function(self, vehicle)
+HCharacter.Subscribe("LeaveVehicle", function(self, vehicle)
     local player = self:GetPlayer()
     Core.UpdateFuel(player)
 end)
