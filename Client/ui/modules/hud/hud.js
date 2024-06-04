@@ -5,8 +5,8 @@ var playerServerId = $('.server-id .detail')
 // Minimap
 const mapContainer = $('.minimap');
 const mapWrapper = $('.map');
-const knownGameCoords = [[160245, -328033], [154332, -374728], [161250, -387233]];
-const knownUICoords = [[517, 1439], [575, 1353], [575, 1324]];
+const knownGameCoords = [[82785, 60891], [-37490, 91710], [-23223, -64216]];
+const knownUICoords = [[751, 177], [465, 98], [500, 468]];
 
 const confettiAnim = document.querySelector('#confetti');
 
@@ -96,14 +96,14 @@ const setRotations = (playerHeading, cameraRotation) => {
     let fixedCameraRotation = cameraRotation;
 
     playerIndicator.css({
-        transform: `translate(-50%, 50%) rotate(-27deg) rotate(${fixedHeading}deg) rotate(-90deg)`
+        transform: `translate(-50%, 50%) rotate(${fixedHeading}deg) rotate(-270deg)`
     });
 
     $('.minimap .rotator-container').css({
-        transform: `rotate(31deg) rotate(${-fixedCameraRotation}deg) rotate(90deg)`
+        transform: `rotate(180deg) rotate(${-fixedCameraRotation}deg) rotate(90deg)`
     });
     $('.map-blip').css({
-        transform: `rotate(-31deg) rotate(${fixedCameraRotation}deg) rotate(-90deg)`
+        transform: `rotate(-180deg) rotate(${fixedCameraRotation}deg) rotate(-90deg)`
     });
 }
 

@@ -1,35 +1,240 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + Svelte + TS</title>
 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="dobby">
+  <link rel="stylesheet" href="style.css">
+  <title>Character Selector</title>
+</head>
 
-    <style>
-		@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap');		
-		*, *::before, *::after {
-			box-sizing: border-box;
-			padding: 0;
-			margin: 0;
-			user-select: none;
-		}
-		
-		body, #app {
-			overflow: hidden;
-			height: 100vh;
-			width: 100vw;
+<body class="hidden">
 
-			/* background-image: url('https://cdn.discordapp.com/attachments/862737146091929660/1216120225775226980/image.png?ex=65ff3b38&is=65ecc638&hm=50ca0106e9b284fcefbd8642d658a3f4bf634bd3be73e8ca039dcceeef2a884f&');
-			background-position: center;
-			background-size: 100%; */
-		}
-	</style>
+  <div class="wrapper character-selector">
+    <div class="character-info">
+      <div class="info" data-type="cash-money">
+        <div class="icon">
+          <img src="./media/cashmoney.svg" alt="">
+        </div>
+        <div class="text">
+          <p class="name">cash money</p>
+          <div class="lix">
+            <p>150.000</p>
+            <img src="./media/lix.svg" alt="">
+          </div>
+        </div>
+      </div>
+      <div class="info" data-type="bank-money">
+        <div class="icon">
+          <img src="./media/bankmoney.svg" alt="">
+        </div>
+        <div class="text">
+          <p class="name">bank money</p>
+          <div class="lix">
+            <p>150.000</p>
+            <img src="./media/lix.svg" alt="">
+          </div>
+        </div>
+      </div>
+      <div class="info" data-type="phone-number">
+        <div class="icon">
+          <img src="./media/phonenumber.svg" alt="">
+        </div>
+        <div class="text">
+          <p class="name">phone number</p>
+          <p class="value">1293898</p>
+        </div>
+      </div>
+      <div class="info" data-type="gender">
+        <div class="icon">
+          <img src="./media/gender.svg" alt="">
+        </div>
+        <div class="text">
+          <p class="name">gender</p>
+          <p class="value">1293898</p>
+        </div>
+      </div>
+      <div class="info" data-type="job">
+        <div class="icon">
+          <img src="./media/job.svg" alt="">
+        </div>
+        <div class="text">
+          <p class="name">job</p>
+          <p class="value">1293898</p>
+        </div>
+      </div>
+      <div class="info" data-type="nationality">
+        <div class="icon">
+          <img src="./media/nationality.svg" alt="">
+        </div>
+        <div class="text">
+          <p class="name">nationality</p>
+          <p class="value">1293898</p>
+        </div>
+      </div>
+      <div class="info" data-type="birth-date">
+        <div class="icon">
+          <img src="./media/birthdate.svg" alt="">
+        </div>
+        <div class="text">
+          <p class="name">birth date</p>
+          <p class="value">1293898</p>
+        </div>
+      </div>
+      <img src="./media/char-info-bg.png" alt="" class="bg">
+      <img src="./media/char-info-bg2.svg" alt="" class="bg">
+    </div>
 
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+    <div class="character-name">
+      <img src="./media/player-name-detail.png" alt="" class="detail">
+      <p class="name">john <span>oils</span></p>
+    </div>
+
+    <div class="character-list">
+      <!-- <div class="character">
+        <div>
+          <span class="id">TU57OQ48</span>
+          <p>Alfonso Dobby</p>
+        </div>
+        <img src="./media/char.svg" alt="">
+        <img src="./media/selected-char-bg.png" alt="" class="selected-bg">
+        <img src="./media/char-bg.png" alt="" class="bg">
+      </div>
+      <div class="character selected">
+        <div>
+          <span class="id">TU57OQ48</span>
+          <p>Facundo Kravs</p>
+        </div>
+        <img src="./media/char.svg" alt="">
+        <img src="./media/selected-char-bg.png" alt="" class="selected-bg">
+        <img src="./media/char-bg.png" alt="" class="bg">
+      </div> -->
+      <div class="new-character">
+        <div>
+          <span>create</span>
+          <p>new character</p>
+        </div>
+        <img src="./media/new-char-button.svg" alt="">
+        <img src="./media/char-bg.png" alt="" class="bg">
+      </div>
+    </div>
+
+    <div class="play-button">
+      <div>
+        <span>choose character</span>
+        <p>and play</p>
+      </div>
+      <button>
+        <img src="./media/play-button.svg" alt="">
+      </button>
+    </div>
+
+  </div>
+
+  <div class="wrapper character-registration">
+    <div class="title">
+      <img src="./media/character-registration-logo.svg" alt="">
+      <div>
+        <p>character</p>
+        <span>registration</span>
+      </div>
+    </div>
+
+    <div class="char-data-fields">
+      <div class="field">
+        <p class="field-name">first name</p>
+        <input type="text" name="first-name" placeholder="First name" id="first-name">
+      </div>
+      <div class="field">
+        <p class="field-name">last name</p>
+        <input type="text" name="last-name" placeholder="Last name" id="last-name">
+      </div>
+      <div class="field" data-type="nationality">
+        <p class="field-name">nationality</p>
+        <p class="dropdown-item-selected">Belarus</p>
+        <div class="dropdown">
+          <button>
+            <img src="./media/arrow.svg" alt="">
+          </button>
+          <div class="dropdown-list"></div>
+        </div>
+      </div>
+      <div class="field" data-type="birthdate">
+        <p class="field-name">birth date</p>
+        <p class="birthdate-selected">MM/DD/YYYY</p>
+        <div class="dropdown">
+          <button>
+            <img src="./media/arrow.svg" alt="">
+          </button>
+          <div class="dropdown-picker">
+            <div class="days"></div>
+            <div>
+              <div class="months">
+                <button class="prev">
+                  <img src="./media/arrow.svg" alt="">
+                </button>
+                <div class="month">January</div>
+                <button class="next">
+                  <img src="./media/arrow.svg" alt="">
+                </button>
+              </div>
+              <div class="years">
+                <button class="prev">
+                  <img src="./media/year-arrow.svg" alt="">
+                </button>
+                <div class="year">2000</div>
+                <button class="next">
+                  <img src="./media/year-arrow.svg" alt="">
+                </button>
+              </div>
+            </div>
+            <img src="./media/data-picker-bg.png" alt="" class="bg">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gender-selector">
+      <div class="gender" data-type="male">
+        <p>male</p>
+        <div class="icon">
+          <img src="./media/male.svg" alt="">
+        </div>
+      </div>
+      <div class="gender" data-type="female">
+        <p>female</p>
+        <div class="icon">
+          <img src="./media/female.svg" alt="">
+        </div>
+      </div>
+    </div>
+
+    <duv class="actions">
+      <button class="back">
+        <img src="./media/year-arrow.svg" alt="">
+        <img src="./media/char-bg.png" alt="" class="bg">
+        <p>go back</p>
+      </button>
+      <button class="confirm">
+        <p>confirm</p>
+        <img src="./media/selected-char-bg.png" alt="" class="bg">
+      </button>
+    </duv>
+  </div>
+  <img src="./media/glow-tl.png" alt="" class="tl-glow">
+  <figure class="outline">
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+  </figure>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+  <script src="nationalities.js"></script>
+  <script src="script.js"></script>
+</body>
+
 </html>

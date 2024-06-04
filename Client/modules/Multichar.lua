@@ -1,4 +1,4 @@
-local multichar_ui = Core.RegisterHUD('multicharacter', 'file://ui/modules/multicharacter/build/index.html')
+local multichar_ui = Core.RegisterHUD('multicharacter', 'file://ui/modules/multicharacter/index.html')
 
 local active_camera = false
 local multichar_small_room
